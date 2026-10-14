@@ -63,8 +63,11 @@ cites the chart factor and the source rule.
 - [ ] Extend the library: planets/signs (ch. 3–4), Nabhasa yogas (ch. 37),
       avasthas (ch. 47), house-lord dashas (ch. 50); Jaimini chapters once the engine computes karakas/arudhas
 - [ ] Replace the dignity-based `strong`/`weak` approximation with validated Shadbala
-- [ ] Report writer: matched rules + chart facts → readable sections (Claude API), with citations;
-      timing section from dasha/antardasha of relevant lords
+- [x] Report writer (`interpret/report.py`, `POST /api/report`): Claude Opus 5.5 turns the matched
+      readings into an overview, current period, transits and one section per life area, each
+      paragraph citing its rule ids (unknown ids are dropped); structured JSON output, server-side
+      refusal fallback; birth data is never sent
+- [ ] Evaluate report quality on a set of real charts (grounding, balance, policy adherence)
 - [ ] PDF export of the report
 
 ### Later (phase 3)

@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { ChartResponse, ChartStyle, DashaPeriod, RuleMatch, SIGNS, SIGN_ABBR } from "../types";
+import { useEffect, useState } from "react";
+import { fetchReport } from "../api";
+import { ChartResponse, ChartStyle, DashaPeriod, ReportParagraph, RuleMatch, SIGNS, SIGN_ABBR, WrittenReport } from "../types";
 import ChartDiagram from "./ChartDiagram";
 
 const TABS = ["Charts", "Planets", "Dasha", "Yogas & Doshas", "Strength", "Transits", "Report"] as const;
@@ -9,6 +10,9 @@ const fmtDate = (iso: string) => new Date(iso).toLocaleDateString(undefined, { y
 
 export default function Results({ data, style, onStyle }: { data: ChartResponse; style: ChartStyle; onStyle: (s: ChartStyle) => void }) {
   const [tab, setTab] = useState<Tab>("Charts");
+  // Kept here so the written report survives switching tabs; cleared when a new chart is cast.
+  const [written, setWritten] = useState<ReportState>({ status: "idle" });
+  useEffect(() => setWritten({ status: "idle" }), [data]);
   return (
     <section className="results">
       <div className="card summary">
@@ -43,7 +47,7 @@ export default function Results({ data, style, onStyle }: { data: ChartResponse;
       {tab === "Yogas & Doshas" && <Yogas data={data} />}
       {tab === "Strength" && <Strength data={data} />}
       {tab === "Transits" && <Transits data={data} />}
-      {tab === "Report" && <Report data={data} />}
+      {tab === "Report" && <Report data={data} written={written} setWritten={setWritten} />}
     </section>
   );
 }
@@ -292,13 +296,89 @@ function CurrentPeriod({ data }: { data: ChartResponse }) {
   );
 }
 
-function Report({ data }: { data: ChartResponse }) {
+type ReportState =
+  | { status: "idle" }
+  | { status: "loading" }
+  | { status: "error"; message: string }
+  | { status: "done"; report: WrittenReport };
+
+function Citations({ ids, readings }: { ids: string[]; readings: Map<string, RuleMatch> }) {
+  if (ids.length === 0) return null;
+  return (
+    <span className="cites">
+      {ids.map((id) => {
+        const m = readings.get(id);
+        if (!m) return null;
+        const src = m.source;
+        return (
+          <span key={id} className="cite-chip" title={m.text}>
+            {BOOKS[src.book]?.name ?? src.book} {src.chapter}.{src.verse}
+          </span>
+        );
+      })}
+    </span>
+  );
+}
+
+function Paragraphs({ items, readings }: { items: ReportParagraph[]; readings: Map<string, RuleMatch> }) {
+  return <>{items.map((p, i) => <p key={i} className="prose">{p.text} <Citations ids={p.rule_ids} readings={readings} /></p>)}</>;
+}
+
+function WrittenReportView({ data, written, setWritten }: ReportProps) {
+  const readings = new Map<string, RuleMatch>();
+  [...data.interpretation.natal, ...data.interpretation.current_period, ...data.interpretation.transits]
+    .forEach((m) => readings.set(m.id, m));
+  const write = () => {
+    setWritten({ status: "loading" });
+    fetchReport(data).then((report) => setWritten({ status: "done", report }))
+      .catch((e: Error) => setWritten({ status: "error", message: e.message }));
+  };
+  if (written.status !== "done") {
+    return (
+      <div className="period">
+        <h3>Written report</h3>
+        <p className="muted">
+          Claude writes a readable report from the readings below, citing the verse behind each statement. Only the chart
+          factors and readings are sent — not your name, birth date or place. It takes about a minute.
+        </p>
+        {written.status === "error" && <p className="error">{written.message}</p>}
+        <button onClick={write} disabled={written.status === "loading"}>
+          {written.status === "loading" ? "Writing the report…" : written.status === "error" ? "Try again" : "Write the report"}
+        </button>
+      </div>
+    );
+  }
+  const r = written.report.report;
+  const title = (area: string) => data.life_areas[area]?.title ?? area;
+  return (
+    <div className="written">
+      <h3>Your report</h3>
+      <Paragraphs items={r.overview} readings={readings} />
+      {r.current_period.length > 0 && <><h4>The period you are in</h4><Paragraphs items={r.current_period} readings={readings} /></>}
+      {r.transits.length > 0 && <><h4>Current transits</h4><Paragraphs items={r.transits} readings={readings} /></>}
+      {r.sections.map((s) => (
+        <section key={s.area}>
+          <h4>{title(s.area)}</h4>
+          <p className="summary-line">{s.summary}</p>
+          <Paragraphs items={s.paragraphs} readings={readings} />
+        </section>
+      ))}
+      <p className="muted small">Written by {written.report.model} from the matched readings. Hover a source to see the reading it cites.</p>
+    </div>
+  );
+}
+
+interface ReportProps { data: ChartResponse; written: ReportState; setWritten: (s: ReportState) => void }
+
+function Report({ data, written, setWritten }: ReportProps) {
   // A rule with no chart factors is a general reading principle, not a statement about this chart.
   const natal = data.interpretation.natal.filter((m) => m.factors.length > 0);
   const byArea = (key: string) => natal.filter((m) => m.areas.includes(key));
   const general = byArea("general");
   return (
     <div className="card">
+      <WrittenReportView data={data} written={written} setWritten={setWritten} />
+      <h3>Readings from the texts</h3>
       <p className="notice">
         Readings below are paraphrased from Brihat Parasara Hora Sastra and Phaladeepika and shown only where this chart meets the
         text's condition. Classical rules can contradict one another; the texts weigh them by planetary strength,

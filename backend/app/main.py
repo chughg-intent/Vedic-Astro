@@ -17,6 +17,7 @@ from .engine.shadbala import shadbala
 from .engine.transits import transits
 from .engine.vargas import VARGA_NAMES, VARGA_THEMES
 from .engine.yogas import all_yogas
+from .interpret import report as report_mod
 from .interpret import rules
 from .interpret.facts import extract
 
@@ -90,6 +91,15 @@ def chart(inp: BirthInput):
                                              av["bav"], yogas),
         },
     }
+
+
+@app.post("/api/report")
+def report(inp: BirthInput):
+    """Readable report written by Claude from the matched readings (takes about a minute)."""
+    try:
+        return report_mod.write_report(chart(inp))
+    except report_mod.ReportError as e:
+        raise HTTPException(e.status, str(e))
 
 
 def _resolve_place(inp: BirthInput) -> dict:

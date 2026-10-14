@@ -134,3 +134,16 @@ export const ABBR: Record<string, string> = {
   Sun: "Su", Moon: "Mo", Mars: "Ma", Mercury: "Me", Jupiter: "Ju", Venus: "Ve", Saturn: "Sa",
   Rahu: "Ra", Ketu: "Ke", Ascendant: "As",
 };
+
+export interface ReportParagraph { text: string; rule_ids: string[] }
+
+export interface WrittenReport {
+  report: {
+    overview: ReportParagraph[];
+    sections: Array<{ area: string; summary: string; paragraphs: ReportParagraph[] }>;
+    current_period: ReportParagraph[];
+    transits: ReportParagraph[];
+  };
+  model: string;
+  usage: { input_tokens: number; output_tokens: number; cache_read_input_tokens: number | null };
+}
