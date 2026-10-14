@@ -19,7 +19,7 @@ committed. Only these paraphrases are.
 
 ## Coverage
 
-899 rules (532 from BPHS, 367 from Phaladeepika). "Encoded" counts rules, not verses; one verse can yield several rules and several
+917 rules (532 from BPHS, 385 from Phaladeepika). "Encoded" counts rules, not verses; one verse can yield several rules and several
 verses can merge into one.
 
 | Ch. | Subject | File | Rules | Status |
@@ -46,13 +46,15 @@ verses can merge into one.
 | V | Profession from the 10th lord's navamsa; source of wealth from the 10th house | 15 | Complete (from the ascendant only) |
 | VIII | Each planet in each of the twelve houses | 108 | Complete (all 9 × 12) |
 | IX | Each rising sign (also applied to the Moon's sign); dasha of a planet by its sign | 16 | Complete except combust-planet dasha (policy) |
+| X | Marriage: supporting factors, more than one marriage, partner quality, dasha timing | 9 | Spouse-death verses (most of the chapter) left out |
+| XII | Children: assured, delayed, late, adoption, 5th-house sign effects, dasha timing | 9 | Child-death, curse and fertility-arithmetic verses left out |
 | XVIII | Two-planet conjunctions; the Moon's sign aspected by each planet | 85 | Moon's-navamsa verses (12–17) not yet encoded |
 | XX | Dasha and sub-period of each house lord, strong or weak; sub-period lord's place from the dasha lord; kendra–trikona lords | 53 | Transit-modified and death-timing verses left out |
 | XXI | Fixed sub-period readings | 3 | Only the three pairs missing from the BPHS scan |
 | XXVI | Transits from the natal Moon, with vedha (obstruction), sign dignity and Ashtakavarga modifiers | 87 | Moon's own transits and the star-based tables left out |
 
-Not yet encoded from Phaladeepika: yogas (VI–VII, much overlaps BPHS), the 7th house and
-children (X, XII), general effects of houses (XV–XVI), Ashtakavarga (XXIII–XXIV).
+Not yet encoded from Phaladeepika: yogas (VI–VII, much overlaps BPHS), horoscopes of women (XI),
+general effects of houses (XV–XVI), Ashtakavarga (XXIII–XXIV).
 
 Every file has a `skipped` list naming the verses left out and why.
 

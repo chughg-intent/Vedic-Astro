@@ -1,0 +1,10 @@
+{
+  "source": {"book": "phaladeepika-sastri", "volume": 1, "chapter": 10, "chapter_title": "Kalatrabhava or the 7th house"},
+  "kind": "dasha",
+  "notes": "Sloka 13: marriage may come in the dasha of a planet in, aspecting or ruling the 7th house. Applied to both dasha and sub-period lords.",
+  "skipped": [],
+  "rules": [
+    {"id": "phaladeepika-sastri.10.13.md", "verse": "13", "page": 109, "when": {"any": [{"in_house": ["MD", 7]}, {"house_aspected_by": [7, "MD"]}, {"rules": ["MD", 7]}]}, "areas": ["marriage"], "tone": "neutral", "text": "The dasha lord occupies, aspects or rules the 7th house: a period in which marriage may come.", "period": {"md": "any"}},
+    {"id": "phaladeepika-sastri.10.13.ad", "verse": "13", "page": 109, "when": {"any": [{"in_house": ["AD", 7]}, {"house_aspected_by": [7, "AD"]}, {"rules": ["AD", 7]}]}, "areas": ["marriage"], "tone": "neutral", "text": "The sub-period lord occupies, aspects or rules the 7th house: a sub-period in which marriage may come.", "period": {"md": "any", "ad": "any"}}
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "source": {"book": "phaladeepika-sastri", "volume": 1, "chapter": 12, "chapter_title": "Issues or Children"},
+  "kind": "dasha",
+  "notes": "Sloka 25: a child may be born in the dasha or sub-period of the ascendant lord, the 7th lord, the 5th lord, Jupiter, or a planet in or aspecting the 5th house.",
+  "skipped": [],
+  "rules": [
+    {"id": "phaladeepika-sastri.12.25.md", "verse": "25", "page": 127, "when": {"any": [{"rules": ["MD", [1, 5, 7]]}, {"in_house": ["MD", 5]}, {"house_aspected_by": [5, "MD"]}, {"in_house_from": ["MD", "Jupiter", [1]]}]}, "areas": ["children"], "tone": "neutral", "text": "The dasha lord rules the 1st, 5th or 7th, is Jupiter or with it, or occupies or aspects the 5th: a period in which a child may be born.", "period": {"md": "any"}},
+    {"id": "phaladeepika-sastri.12.25.ad", "verse": "25", "page": 127, "when": {"any": [{"rules": ["AD", [1, 5, 7]]}, {"in_house": ["AD", 5]}, {"house_aspected_by": [5, "AD"]}, {"in_house_from": ["AD", "Jupiter", [1]]}]}, "areas": ["children"], "tone": "neutral", "text": "The sub-period lord rules the 1st, 5th or 7th, is Jupiter or with it, or occupies or aspects the 5th: a sub-period in which a child may be born.", "period": {"md": "any", "ad": "any"}}
+  ]
+}
