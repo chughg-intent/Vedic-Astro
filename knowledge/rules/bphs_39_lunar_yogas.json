@@ -1,0 +1,23 @@
+{
+  "source": {"book": "bphs-sharma", "volume": 1, "chapter": 39, "chapter_title": "Lunar Yogas"},
+  "kind": "natal",
+  "notes": "Verse 13 adds that the Moon's yogas can override the results of other yogas and should be weighed carefully.",
+  "skipped": [
+    {"verse": "2-4", "reason": "Moon's navamsa by day/night birth aspected by Jupiter/Venus: needs day/night birth and navamsa relationship."}
+  ],
+  "rules": [
+    {"verse": "1", "page": 536, "areas": ["wealth", "mind", "education"], "tone": "neutral", "text": "", "variants": [
+      {"when": {"in_house_from": ["Moon", "Sun", [1, 4, 7, 10]]}, "text": "The Moon is in an angle from the Sun: wealth, intelligence and skill are modest.", "tone": "mixed"},
+      {"when": {"in_house_from": ["Moon", "Sun", [2, 5, 8, 11]]}, "text": "The Moon is in a succedent house (2nd, 5th, 8th or 11th) from the Sun: wealth, intelligence and skill are middling.", "tone": "neutral"},
+      {"when": {"in_house_from": ["Moon", "Sun", [3, 6, 9, 12]]}, "text": "The Moon is in a cadent house (3rd, 6th, 9th or 12th) from the Sun: wealth, intelligence and skill are excellent.", "tone": "favourable"}]},
+    {"verse": "5", "page": 537, "when": {"yoga": "Adhi Yoga"}, "areas": ["career"], "tone": "favourable", "text": "Adhi Yoga (benefics in the 6th, 7th and 8th from the Moon): rise to leadership — as head, senior adviser or commander — in proportion to the strength of the planets forming it."},
+    {"verse": "6", "page": 538, "areas": ["wealth"], "tone": "favourable", "text": "", "variants": [
+      {"when": {"count_in_houses": ["benefic", [["Moon", 3], ["Moon", 6], ["Moon", 10], ["Moon", 11]], 3]}, "text": "Dhana Yoga from the Moon: all the benefics are in the growth houses (3rd, 6th, 10th, 11th) from the Moon, indicating great affluence."},
+      {"when": {"count_in_houses": ["benefic", [["Moon", 3], ["Moon", 6], ["Moon", 10], ["Moon", 11]], 2, 2]}, "text": "Dhana Yoga from the Moon: two benefics are in the growth houses (3rd, 6th, 10th, 11th) from the Moon, indicating moderate wealth."},
+      {"when": {"count_in_houses": ["benefic", [["Moon", 3], ["Moon", 6], ["Moon", 10], ["Moon", 11]], 1, 1]}, "text": "Dhana Yoga from the Moon: one benefic is in the growth houses (3rd, 6th, 10th, 11th) from the Moon, indicating a little wealth."}]},
+    {"id": "bphs-sharma.39.7-10.sunapha", "verse": "7-10", "page": 539, "when": {"yoga": "Sunapha Yoga"}, "areas": ["wealth", "career", "mind"], "tone": "favourable", "text": "Sunapha Yoga (a planet other than the Sun in the 2nd from the Moon): high standing, intelligence, wealth and fame, with wealth earned by one's own effort."},
+    {"id": "bphs-sharma.39.7-10.anapha", "verse": "7-10", "page": 539, "when": {"yoga": "Anapha Yoga"}, "areas": ["career", "health", "mind"], "tone": "favourable", "text": "Anapha Yoga (a planet other than the Sun in the 12th from the Moon): high standing and good general health; virtuous, well known, charming and blessed with every kind of happiness."},
+    {"id": "bphs-sharma.39.7-10.durudhara", "verse": "7-10", "page": 539, "when": {"yoga": "Durudhara Yoga"}, "areas": ["wealth", "property", "mind"], "tone": "favourable", "text": "Durudhara Yoga (planets other than the Sun on both sides of the Moon): enjoyment of all comforts, generosity, wealth and vehicles, and excellent people in one's service."},
+    {"verse": "11-13", "page": 540, "when": {"yoga": "Kemadruma Yoga"}, "areas": ["mind", "wealth", "education"], "tone": "challenging", "text": "Kemadruma Yoga (the Moon isolated, with no planet beside it or in the angles): periods of low standing, financial hardship and setbacks, with obstacles to learning. The translator notes it is cancelled when the Moon is exalted or in a great friend's sign and aspected by Jupiter, or has other planetary support.", "variants": [{"when": {"any": [{"aspected_by": ["Moon", "Jupiter"]}, {"dignity": ["Moon", ["exalted", "own", "moolatrikona"]]}]}, "text": "Here the Moon is dignified or aspected by Jupiter, which substantially offsets the yoga.", "tone": "mixed"}]}
+  ]
+}

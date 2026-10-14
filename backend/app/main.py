@@ -17,6 +17,7 @@ from .engine.shadbala import shadbala
 from .engine.transits import transits
 from .engine.vargas import VARGA_NAMES, VARGA_THEMES
 from .engine.yogas import all_yogas
+from .interpret import rules
 from .interpret.facts import extract
 
 app = FastAPI(title="Vedic Astro API", version="0.1.0")
@@ -60,6 +61,7 @@ def chart(inp: BirthInput):
     yogas = all_yogas(c)
     av = ashtakavarga(c)
     now = datetime.now(timezone.utc)
+    current = dasha_mod.current_periods(dashas, now)
 
     return {
         "input": inp.model_dump(mode="json"),
@@ -73,12 +75,17 @@ def chart(inp: BirthInput):
         "vargas": {d: {**divisional(c, d), "theme": VARGA_THEMES[d]} for d in VARGA_NAMES},
         "vargottama": vargottama(c),
         "dasha": {"system": "vimshottari", "periods": dasha_mod.serialize(dashas),
-                  "current": dasha_mod.current_periods(dashas, now)},
+                  "current": current},
         **yogas,
         "ashtakavarga": av,
         "shadbala": shadbala(c),
         "transits": transits(c, now),
         "life_areas": extract(c, yogas, dashas, av),
+        "interpretation": {
+            "natal": rules.match(c, yogas),
+            "current_period": [m for ad in (None, *current[1:2]) if current
+                               for m in rules.match_period(c, current[0], ad, yogas)],
+        },
     }
 
 

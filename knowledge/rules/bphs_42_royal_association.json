@@ -1,0 +1,11 @@
+{
+  "source": {"book": "bphs-sharma", "volume": 1, "chapter": 42, "chapter_title": "Yogas for Royal Association"},
+  "kind": "natal",
+  "skipped": [
+    {"verse": "1, 3-12, 14-15", "reason": "Use the Jaimini karakas (Atmakaraka, Amatyakaraka) or Arudha, which the engine does not compute yet."}
+  ],
+  "rules": [
+    {"verse": "2", "page": 555, "when": {"all": [{"house_aspected_by": [11, "L11"]}, {"not": {"house_has": [10, "malefic"]}}, {"not": {"house_aspected_by": [10, "malefic"]}}]}, "areas": ["career"], "tone": "favourable", "text": "The 11th lord aspects the 11th house while the 10th is free of malefic occupation and aspect: a leading place among those close to power — senior rank in government or a large organisation."},
+    {"verse": "13", "page": 557, "when": {"all": [{"in_house": ["L1", 10]}, {"in_house": ["L10", 1]}]}, "areas": ["career"], "tone": "favourable", "text": "The ascendant lord and the 10th lord exchange houses: a strong combination for association with rulers and people in authority."}
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "source": {"book": "bphs-sharma", "volume": 1, "chapter": 24, "chapter_title": "Effects of the Eleventh House"},
+  "kind": "natal",
+  "notes": "Clauses about life span, death, named diseases and physical defects are omitted under the sensitive-topics policy; affected rules list them in 'dropped'.",
+  "skipped": [],
+  "rules": [
+    {"verse": "2", "page": 268, "when": {"any": [{"in_house": ["L11", [11, 1, 4, 7, 10, 5, 9]]}, {"dignity": ["L11", "exalted"]}]}, "areas": ["wealth"], "tone": "favourable", "text": "The 11th lord in the 11th, an angle or a trine, or exalted (even if combust): many gains."},
+    {"verse": "3", "page": 269, "when": {"all": [{"in_house": ["L11", 2]}, {"in_house": ["L2", [1, 4, 7, 10]]}, {"in_house": ["Jupiter", 11]}]}, "areas": ["wealth"], "tone": "favourable", "text": "The 11th lord in the 2nd, the 2nd lord in an angle and Jupiter in the 11th: immense gains."},
+    {"verse": "4-6", "page": 269, "areas": ["wealth"], "tone": "favourable", "text": "", "variants": [{"when": {"all": [{"in_house": ["L11", 3]}, {"house_has": [11, "benefic"]}]}, "text": "The 11th lord in the 3rd with benefics in the 11th: a substantial gain (the text times it around the 36th year)."}, {"when": {"all": [{"conjunct": ["L11", "benefic"]}, {"in_house": ["L11", [1, 4, 7, 10, 5, 9]]}]}, "text": "The 11th lord with a benefic in an angle or trine: a gain around the 40th year."}, {"when": {"all": [{"in_house": ["Jupiter", 11]}, {"in_house": ["Moon", 2]}, {"in_house": ["Venus", 9]}]}, "text": "Jupiter in the 11th, the Moon in the 2nd and Venus in the 9th: considerable wealth."}]},
+    {"verse": "7", "page": 270, "when": {"all": [{"in_house": ["Jupiter", 9]}, {"in_house": ["Mercury", 9]}, {"in_house": ["Moon", 9]}]}, "areas": ["wealth"], "tone": "favourable", "text": "Jupiter with Mercury and the Moon in the 9th: wealth, provisions, fortune, jewels and ornaments."},
+    {"verse": "8", "page": 270, "when": {"all": [{"in_house": ["L11", 1]}, {"in_house": ["L1", 11]}]}, "areas": ["wealth"], "tone": "favourable", "text": "The ascendant and 11th lords exchange houses: a substantial gain (the text times it around the 33rd year)."},
+    {"verse": "9", "page": 270, "when": {"all": [{"in_house": ["L2", 11]}, {"in_house": ["L11", 2]}]}, "areas": ["wealth", "marriage"], "tone": "favourable", "text": "The 2nd and 11th lords exchange houses: a great rise in fortune after marriage."},
+    {"verse": "10", "page": 270, "when": {"all": [{"in_house": ["L3", 11]}, {"in_house": ["L11", 3]}]}, "areas": ["wealth", "family"], "tone": "favourable", "text": "The 3rd and 11th lords exchange houses: gains through siblings and fine ornaments."},
+    {"verse": "11", "page": 270, "when": {"any": [{"dignity": ["L11", "debilitated"]}, {"combust": "L11"}, {"all": [{"in_house": ["L11", [6, 8, 12]]}, {"conjunct": ["L11", "malefic"]}]}]}, "areas": ["wealth"], "tone": "challenging", "text": "The 11th lord debilitated, combust, or with a malefic in the 6th, 8th or 12th: little gain despite great effort."}
+  ]
+}

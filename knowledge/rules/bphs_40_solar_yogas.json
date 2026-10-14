@@ -1,0 +1,16 @@
+{
+  "source": {"book": "bphs-sharma", "volume": 1, "chapter": 40, "chapter_title": "Solar Yogas"},
+  "kind": "natal",
+  "notes": "Verse 4: the stated results hold when the yoga is formed by benefics; when formed by malefics the results are reversed.",
+  "rules": [
+    {"id": "bphs-sharma.40.vesi", "verse": "1-4", "page": 541, "when": {"yoga": "Vesi Yoga"}, "areas": ["mind", "wealth", "physical"], "tone": "neutral", "text": "Vesi Yoga (a planet other than the Moon in the 2nd from the Sun).", "variants": [
+      {"when": {"house_has": [["Sun", 2], "benefic"]}, "text": "Formed by a benefic: even-handed and truthful, tall, easy-going to the point of laziness, happy, with modest wealth.", "tone": "favourable"},
+      {"when": {"not": {"house_has": [["Sun", 2], "benefic"]}}, "text": "Formed by malefics only: the text says the usual results (fairness, truthfulness, contentment) are reversed.", "tone": "challenging"}]},
+    {"id": "bphs-sharma.40.vasi", "verse": "1-4", "page": 541, "when": {"yoga": "Vasi Yoga"}, "areas": ["career", "education", "mind"], "tone": "neutral", "text": "Vasi (Vosi) Yoga (a planet other than the Moon in the 12th from the Sun).", "variants": [
+      {"when": {"house_has": [["Sun", 12], "benefic"]}, "text": "Formed by a benefic: skilful and charitable, with fame, learning and strength.", "tone": "favourable"},
+      {"when": {"not": {"house_has": [["Sun", 12], "benefic"]}}, "text": "Formed by malefics only: the text says the usual results (skill, generosity, fame, learning) are reversed.", "tone": "challenging"}]},
+    {"id": "bphs-sharma.40.ubhayachari", "verse": "1-4", "page": 541, "when": {"yoga": "Ubhayachari Yoga"}, "areas": ["career", "mind"], "tone": "neutral", "text": "Ubhayachari Yoga (planets other than the Moon on both sides of the Sun).", "variants": [
+      {"when": {"any": [{"house_has": [["Sun", 2], "benefic"]}, {"house_has": [["Sun", 12], "benefic"]}]}, "text": "With a benefic taking part: happiness and standing like that of a ruler.", "tone": "favourable"},
+      {"when": {"not": {"any": [{"house_has": [["Sun", 2], "benefic"]}, {"house_has": [["Sun", 12], "benefic"]}]}}, "text": "Formed by malefics only: the text says the usual result (happiness and standing like a ruler's) is reversed.", "tone": "challenging"}]}
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "source": {"book": "bphs-sharma", "volume": 1, "chapter": 44, "chapter_title": "Combinations for Penury"},
+  "kind": "natal",
+  "notes": "These are phrased as financial strain rather than certain poverty. 'Maraka lord' in this chapter means the lord of the 2nd or 7th house and is used only as a house lordship.",
+  "skipped": [
+    {"verse": "4, 8-12", "reason": "Need Ketu/dispositor chains, navamsa lords or 'auspicious/inauspicious house' classes not encodable yet."},
+    {"verse": "13", "reason": "Dasha timing rule; to be added with the dasha rules."},
+    {"verse": "14-15", "reason": "Use the Atmakaraka."}
+  ],
+  "rules": [
+    {"verse": "2", "page": 569, "when": {"all": [{"in_house": ["L1", 12]}, {"in_house": ["L12", 1]}, {"any": [{"influenced_by": ["L12", "L2"]}, {"influenced_by": ["L12", "L7"]}]}]}, "areas": ["wealth"], "tone": "challenging", "text": "The ascendant lord and 12th lord exchange houses, with the 2nd or 7th lord influencing the 12th lord: a combination for financial hardship."},
+    {"verse": "3", "page": 570, "when": {"all": [{"in_house": ["L1", 6]}, {"in_house": ["L6", 1]}, {"any": [{"influenced_by": ["L6", "L2"]}, {"influenced_by": ["L6", "L7"]}]}]}, "areas": ["wealth"], "tone": "challenging", "text": "The ascendant lord and 6th lord exchange houses, with the 2nd or 7th lord influencing the 6th lord: a combination for lack of wealth."},
+    {"verse": "5", "page": 570, "when": {"all": [{"in_house": ["L1", [6, 8, 12]]}, {"conjunct": ["L1", "malefic"]}, {"dignity": ["L2", ["enemy", "debilitated"]]}]}, "areas": ["wealth"], "tone": "challenging", "text": "The ascendant lord is with a malefic in the 6th, 8th or 12th while the 2nd lord is debilitated or in an enemy's sign: money troubles even for someone born into wealth."},
+    {"verse": "6", "page": 570, "when": {"all": [{"any": [{"conjunct": ["L1", "L6"]}, {"conjunct": ["L1", "L8"]}, {"conjunct": ["L1", "L12"]}, {"conjunct": ["L1", "Saturn"]}]}, {"not": {"aspected_by": ["L1", "benefic"]}}]}, "areas": ["wealth"], "tone": "challenging", "text": "The ascendant lord is joined by the lord of the 6th, 8th or 12th, or by Saturn, with no benefic aspect: a combination for financial strain."},
+    {"verse": "7", "page": 570, "when": {"all": [{"in_house": ["L5", 6]}, {"in_house": ["L9", 12]}, {"any": [{"aspected_by": ["L5", "L2"]}, {"aspected_by": ["L5", "L7"]}, {"aspected_by": ["L9", "L2"]}, {"aspected_by": ["L9", "L7"]}]}]}, "areas": ["wealth"], "tone": "challenging", "text": "The 5th lord in the 6th and the 9th lord in the 12th, aspected by the 2nd or 7th lord: a combination for financial hardship."},
+    {"id": "bphs-sharma.44.16-18.mars-saturn", "verse": "16-18", "page": 572, "when": {"all": [{"in_house": ["Mars", 2]}, {"in_house": ["Saturn", 2]}]}, "areas": ["wealth"], "tone": "challenging", "text": "Mars and Saturn in the 2nd house are said to drain wealth.", "variants": [{"when": {"aspected_by": ["Mars", "Mercury"]}, "text": "Here Mercury aspects them, which the text says reverses the result and makes the person very rich.", "tone": "favourable"}]},
+    {"id": "bphs-sharma.44.16-18.sun", "verse": "16-18", "page": 572, "when": {"in_house": ["Sun", 2]}, "areas": ["wealth", "career"], "tone": "mixed", "text": "", "variants": [{"when": {"aspected_by": ["Sun", "Saturn"]}, "text": "The Sun in the 2nd house aspected by Saturn: loss of wealth.", "tone": "challenging"}, {"when": {"not": {"aspected_by": ["Sun", "Saturn"]}}, "text": "The Sun in the 2nd house without Saturn's aspect: great wealth and fame.", "tone": "favourable"}]},
+    {"id": "bphs-sharma.44.16-18.saturn", "verse": "16-18", "page": 572, "when": {"all": [{"in_house": ["Saturn", 2]}, {"not": {"in_house": ["Mars", 2]}}]}, "areas": ["wealth", "career"], "tone": "mixed", "text": "", "variants": [{"when": {"aspected_by": ["Saturn", "Sun"]}, "text": "Saturn in the 2nd house aspected by the Sun: severe financial strain.", "tone": "challenging"}, {"when": {"not": {"aspected_by": ["Saturn", "Sun"]}}, "text": "Saturn in the 2nd house without the Sun's aspect: wealth and fame.", "tone": "favourable"}]}
+  ]
+}

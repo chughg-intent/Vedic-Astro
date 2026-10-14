@@ -9,3 +9,8 @@ dist/
 
 # reference books (copyrighted) are never committed
 knowledge/books/
+
+# OCR text of the books and the compiled OCR helper
+knowledge/ocr/
+knowledge/tools/ocr
+.DS_Store
