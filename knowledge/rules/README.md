@@ -13,12 +13,13 @@ committed. Only these paraphrases are.
 | Key | Book |
 |---|---|
 | `bphs-sharma` | *Brihat Parasara Hora Sastra*, with English translation and commentary by Girish Chand Sharma, Sagar Publications. Vol. 1 (chapters 1–47, 1994), Vol. 2 (chapters 48–100, 1995). |
+| `phaladeepika-sastri` | Mantreswara's *Phaladeepika* (Adhyayas I–XXVIII), with English translation by V. Subrahmanya Sastri, Bangalore, 1937. Single volume (`volume` is 1); `chapter` is the Adhyaya number, `verse` the sloka. |
 
 `page` is the page number printed in the book, not the PDF page.
 
 ## Coverage
 
-532 rules. "Encoded" counts rules, not verses; one verse can yield several rules and several
+756 rules (532 from BPHS, 224 from Phaladeepika). "Encoded" counts rules, not verses; one verse can yield several rules and several
 verses can merge into one.
 
 | Ch. | Subject | File | Rules | Status |
@@ -37,6 +38,19 @@ verses can merge into one.
 | 49 | Mahadasha results, all nine planets | `bphs_49_mahadasha.json` | 21 | Complete |
 | 54–62 | Antardasha results within each mahadasha | `bphs_5x/6x_antardasha_*.json` | 169 | 78 of 81 pairs (see below) |
 | 77 | Pancha Mahapurusha yogas | `bphs_77_mahapurusha.json` | 5 | Complete |
+
+**Phaladeepika** (files `phaladeepika_*.json`):
+
+| Adh. | Subject | Rules | Status |
+|---|---|---|---|
+| V | Profession from the 10th lord's navamsa; source of wealth from the 10th house | 15 | Complete (from the ascendant only) |
+| VIII | Each planet in each of the twelve houses | 108 | Complete (all 9 × 12) |
+| IX | Each rising sign (also applied to the Moon's sign); dasha of a planet by its sign | 16 | Complete except combust-planet dasha (policy) |
+| XVIII | Two-planet conjunctions; the Moon's sign aspected by each planet | 85 | Moon's-navamsa verses (12–17) not yet encoded |
+
+Not yet encoded from Phaladeepika: yogas (VI–VII, much overlaps BPHS), the 7th house and
+children (X, XII), general effects of houses (XV–XVI), dashas of house lords (XX–XXI),
+Ashtakavarga (XXIII–XXIV) and transits (XXVI).
 
 Every file has a `skipped` list naming the verses left out and why.
 
@@ -108,6 +122,7 @@ counted from that planet.
 | `in_sign` | `[ref, sign or list]` | planet is in one of the signs |
 | `lagna` / `lagna_movable` | `sign or list` / `true` | ascendant sign test |
 | `rules` | `[ref, house or list]` | planet is lord of one of the houses |
+| `in_navamsa_of` | `[ref, planet or list]` | the navamsa sign the planet occupies is ruled by one of these |
 | `dignity` | `[ref, label or list]` | `exalted` `moolatrikona` `own` `friend` `neutral` `enemy` `debilitated` |
 | `strong` / `weak` | `ref` | see below |
 | `nature` | `[ref, "benefic"\|"malefic"]` | natural nature of the planet |
@@ -136,11 +151,11 @@ counted from that planet.
 
 ## Regenerating the OCR text
 
-The PDFs' embedded text layer is unusable for English (it was produced with a Devanagari OCR
-model). On macOS:
+The BPHS PDFs' embedded text layer is unusable for English (it was produced with a Devanagari
+OCR model), and the Phaladeepika scan has no text layer at all. On macOS:
 
 ```bash
 pip install pymupdf
 swiftc -O knowledge/tools/ocr.swift -o knowledge/tools/ocr
-python knowledge/tools/ocr_books.py      # ~4 minutes, writes knowledge/ocr/vol{1,2}/pNNNN.txt
+python knowledge/tools/ocr_books.py      # ~5 minutes, writes knowledge/ocr/{vol1,vol2,phaladeepika}/pNNNN.txt
 ```

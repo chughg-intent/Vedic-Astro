@@ -222,7 +222,10 @@ function Transits({ data }: { data: ChartResponse }) {
   );
 }
 
-const BOOKS: Record<string, string> = { "bphs-sharma": "BPHS" };
+const BOOKS: Record<string, { name: string; volumes: boolean }> = {
+  "bphs-sharma": { name: "BPHS", volumes: true },
+  "phaladeepika-sastri": { name: "Phaladeepika", volumes: false },
+};
 
 function Reading({ m }: { m: RuleMatch }) {
   const src = m.source;
@@ -231,7 +234,7 @@ function Reading({ m }: { m: RuleMatch }) {
       <p>{m.tone !== "neutral" && <span className={`tone ${m.tone}`}>{m.tone}</span>}{m.text}</p>
       {m.factors.length > 0 && <p className="why">Because: {m.factors.join("; ")}</p>}
       <p className="cite" title={src.chapter_title}>
-        {BOOKS[src.book] ?? src.book} ch. {src.chapter}, v. {src.verse} · vol. {src.volume} p. {src.page}
+        {BOOKS[src.book]?.name ?? src.book} ch. {src.chapter}, v. {src.verse} · {BOOKS[src.book]?.volumes ? `vol. ${src.volume} ` : ""}p. {src.page}
       </p>
     </li>
   );
@@ -277,7 +280,7 @@ function Report({ data }: { data: ChartResponse }) {
   return (
     <div className="card">
       <p className="notice">
-        Readings below are paraphrased from Brihat Parasara Hora Sastra and shown only where this chart meets the
+        Readings below are paraphrased from Brihat Parasara Hora Sastra and Phaladeepika and shown only where this chart meets the
         text's condition. Classical rules can contradict one another; the texts weigh them by planetary strength,
         so treat each as one factor, not a verdict.
       </p>

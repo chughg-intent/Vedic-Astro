@@ -31,7 +31,7 @@ def test_house_lord_chapter_is_complete(library):
     """Chapter 26 has one verse per (lord, house); only verse 75 is withheld by policy."""
     seen = set()
     for r in library:
-        if r["source"]["chapter"] != 26:
+        if r["source"]["book"] != "bphs-sharma" or r["source"]["chapter"] != 26:
             continue
         cond = r["when"]["all"][0] if "all" in r["when"] else r["when"]
         ref, house = cond["in_house"]
@@ -41,7 +41,7 @@ def test_house_lord_chapter_is_complete(library):
 
 
 def test_each_house_lord_matches_at_most_one_placement(chart, library):
-    hits = [m for m in R.match(chart, all_yogas(chart)) if m["source"]["chapter"] == 26]
+    hits = [m for m in R.match(chart, all_yogas(chart)) if m["source"]["book"] == "bphs-sharma" and m["source"]["chapter"] == 26]
     lords = [m["factors"][0].split(" lord")[0] for m in hits]
     assert len(lords) == len(set(lords)) and 10 <= len(hits) <= 12
     for m in hits:
@@ -144,5 +144,23 @@ def test_conflicting_variant_tones_are_reported_as_mixed(chart):
 
 
 def test_every_house_has_a_judgement_rule_except_the_eighth(library):
-    houses = {int(r["id"].split(".h")[1].split(".")[0]) for r in library if r["source"]["chapter"] == 13}
+    houses = {int(r["id"].split(".h")[1].split(".")[0]) for r in library
+              if r["source"]["book"] == "bphs-sharma" and r["source"]["chapter"] == 13}
     assert houses == set(range(1, 13)) - {8}
+
+
+def test_phaladeepika_covers_every_planet_in_every_house(library):
+    pairs = {tuple(r["when"]["in_house"]) for r in library
+             if r["source"]["book"] == "phaladeepika-sastri" and r["source"]["chapter"] == 8}
+    assert pairs == {(p, h) for p in PLANETS for h in range(1, 13)}
+
+
+def test_navamsa_lord_predicate(chart):
+    from app.engine.constants import SIGN_LORDS
+    from app.engine.vargas import varga_sign
+    lord = SIGN_LORDS[varga_sign(chart.longitudes["Sun"], 9)]
+    ctx = R.Context(chart)
+    assert R.evaluate({"in_navamsa_of": ["Sun", lord]}, ctx)[0]
+    assert not R.evaluate({"in_navamsa_of": ["Sun", [q for q in PLANETS[:7] if q != lord]]}, ctx)[0]
+    with pytest.raises(R.RuleError):
+        R.check_condition({"in_navamsa_of": ["Sun", "Rahu"]}, "test")

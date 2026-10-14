@@ -13,8 +13,9 @@ from functools import lru_cache
 from pathlib import Path
 
 from ..engine.chart import Chart
-from ..engine.constants import KENDRAS, MOVABLE, PLANETS, SIGNS, TRIKONAS
+from ..engine.constants import KENDRAS, MOVABLE, PLANETS, SIGN_LORDS, SIGNS, TRIKONAS
 from ..engine.dignity import dignity, house_from, is_combust
+from ..engine.vargas import varga_sign
 from .facts import LIFE_AREAS
 
 RULES_DIR = Path(__file__).resolve().parents[3] / "knowledge" / "rules"
@@ -160,6 +161,13 @@ def _nature(c: Context, a):
     return kind == a[1], f"{c.label(a[0])} is a natural {kind}"
 
 
+def _in_navamsa_of(c: Context, a):
+    """[ref, planet or list] — the navamsa sign the planet occupies is ruled by one of these planets."""
+    sign = varga_sign(c.chart.longitudes[c.planet(a[0])], 9)
+    lord = SIGN_LORDS[sign]
+    return lord in _as_list(a[1]), f"{c.label(a[0])} in a navamsa of {lord} ({SIGNS[sign]})"
+
+
 def _rules(c: Context, a):
     p = c.planet(a[0])
     hits = [h for h in c.chart.houses_ruled(p) if h in _as_list(a[1])]
@@ -268,6 +276,7 @@ PREDICATES = {
     "in_house": _in_house, "in_house_from": _in_house_from, "in_sign": _in_sign,
     "lagna": _lagna, "lagna_movable": _lagna_movable, "dignity": _dignity,
     "strong": _strong, "weak": _weak, "nature": _nature, "rules": _rules,
+    "in_navamsa_of": _in_navamsa_of,
     "conjunct": _conjunct, "aspected_by": _aspected_by, "influenced_by": _influenced_by,
     "house_has": _house_has, "house_only": _house_only, "house_aspected_by": _house_aspected_by,
     "exchange": _exchange, "related": _related, "mutual_kendra": _mutual_kendra,
@@ -354,6 +363,10 @@ def check_condition(cond, where: str, dasha: bool = False) -> None:
         _check_ref(a[0], where, dasha)
         if a[1] not in ("benefic", "malefic"):
             raise RuleError(f"{where}: nature must be benefic or malefic")
+    elif op == "in_navamsa_of":
+        _check_ref(a[0], where, dasha)
+        if not set(_as_list(a[1])) <= set(PLANETS[:7]):
+            raise RuleError(f"{where}: navamsa lords are the seven planets, got {a[1]!r}")
     elif op in ("conjunct", "aspected_by", "influenced_by"):
         _check_ref(a[0], where, dasha)
         if a[1] not in GROUPS:

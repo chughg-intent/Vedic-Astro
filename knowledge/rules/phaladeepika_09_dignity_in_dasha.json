@@ -1,0 +1,12 @@
+{
+  "source": {"book": "phaladeepika-sastri", "volume": 1, "chapter": 9, "chapter_title": "Effects of Mesha and other signs being the Lagna"},
+  "kind": "dasha",
+  "notes": "Slokas 15-19: how the sign a planet occupies colours its whole dasha.",
+  "skipped": [{"verse": "19", "reason": "Dasha of a combust planet: death and ruin, excluded by policy."}],
+  "rules": [
+    {"id": "phaladeepika-sastri.9.15", "verse": "15", "page": 103, "period": {"md": "any"}, "when": {"dignity": ["MD", ["own", "moolatrikona"]]}, "areas": ["career", "property"], "tone": "favourable", "text": "Dasha of a planet in its own sign: power and strength through a wealthy patron or in one's own right, a settled residence, a new house and productive land, honour among one's people, and recovery of lost things."},
+    {"id": "phaladeepika-sastri.9.16", "verse": "16", "page": 103, "period": {"md": "any"}, "when": {"dignity": ["MD", ["friend"]]}, "areas": ["family", "wealth"], "tone": "favourable", "text": "Dasha of a planet in a friend's sign: success through friends, new friendships, and good fortune in children, spouse, wealth and provisions, with help from all sides."},
+    {"id": "phaladeepika-sastri.9.17", "verse": "17", "page": 103, "period": {"md": "any"}, "when": {"dignity": ["MD", ["enemy"]]}, "areas": ["mind", "wealth"], "tone": "challenging", "text": "Dasha of a planet in an enemy's sign: low spirits, dependence on others, hardship and harassment from opponents; even old friends may turn hostile."},
+    {"id": "phaladeepika-sastri.9.18", "verse": "18", "page": 103, "period": {"md": "any"}, "when": {"dignity": ["MD", ["debilitated"]]}, "areas": ["career", "wealth"], "tone": "challenging", "text": "Dasha of a debilitated planet: loss of position and humiliation, debts, reliance on unworthy people, poor surroundings, menial work and wasted effort."}
+  ]
+}
