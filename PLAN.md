@@ -11,6 +11,9 @@
 | Interpretation | Built from the owner's reference books (`documents/claude/horobuilder`) |
 | Stack | Python/FastAPI + React/TypeScript |
 | Audience | Undecided — build as MVP, keep the engine isolated so licensing can change later |
+| Sensitive topics | Excluded: no longevity/death timing, no medical diagnoses, no other fear-inducing predictions; health is phrased as general tendencies |
+| Language | English only for MVP |
+| Reference books | 2 PDFs (~20 MB each). PDFs stay out of the public repo; only the extracted, paraphrased rule base (with book/page citations) is committed |
 
 ## Architecture
 
@@ -62,10 +65,4 @@ cites the chart factor and the source rule.
 - [ ] Pre-1950 India / LMT birth times: manual UTC-offset override
 
 ## Open questions
-1. **Reference books** — this cloud workspace cannot read files on your laptop. Options:
-   commit them to a private repo folder (e.g. `knowledge/books/`), or connect your computer to
-   this session. Text PDFs/EPUBs are best; scanned PDFs need OCR. Keep the repo private if the
-   books are copyrighted.
-2. **Sensitive predictions** — suggested policy: no death/longevity timing, no medical
-   diagnoses; health is phrased as tendencies with a "consult a doctor" note.
-3. **Report language(s)** — English only for MVP?
+1. Repo visibility — currently public. Keep it public (books never committed) or make it private.

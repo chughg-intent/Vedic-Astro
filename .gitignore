@@ -6,3 +6,6 @@ node_modules/
 dist/
 .env
 *.se1
+
+# reference books (copyrighted) are never committed
+knowledge/books/
