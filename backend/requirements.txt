@@ -1,0 +1,7 @@
+fastapi>=0.115
+uvicorn[standard]>=0.30
+pyswisseph>=2.10
+timezonefinder>=6.5
+geonamescache>=2.0
+httpx>=0.27
+pytest>=8
