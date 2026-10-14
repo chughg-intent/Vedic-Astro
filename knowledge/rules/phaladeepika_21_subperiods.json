@@ -1,0 +1,11 @@
+{
+  "source": {"book": "phaladeepika-sastri", "volume": 1, "chapter": 21, "chapter_title": "Nature of Bhuktis and Antaras"},
+  "kind": "dasha",
+  "notes": "Adhyaya XXI gives one unconditional reading for every sub-period of every dasha. Only the three pairs missing from the damaged BPHS scan (Mercury-Mercury, Mercury-Saturn, Venus-Saturn) are encoded here; BPHS ch. 54-62 cover the other 78 with conditions.",
+  "skipped": [{"verse": "3-81 (other pairs)", "reason": "Covered with conditions by BPHS ch. 54-62; Phaladeepika's versions are largely diseases and deaths."}],
+  "rules": [
+    {"verse": "57", "page": 236, "period": {"md": "Mercury", "ad": "Mercury"}, "areas": ["education", "wealth", "spirituality"], "tone": "favourable", "text": "Mercury-Mercury: devotion to virtue, the company of learned people, a clear and unbiased mind, money through scholars, great fame through learning and continuous happiness."},
+    {"verse": "65", "page": 238, "period": {"md": "Mercury", "ad": "Saturn"}, "areas": ["wealth", "career"], "tone": "challenging", "text": "Mercury-Saturn: heavy loss of wealth and of good standing, and setbacks across business.", "dropped": ["health"]},
+    {"verse": "81", "page": 242, "period": {"md": "Venus", "ad": "Saturn"}, "areas": ["career", "marriage", "wealth"], "tone": "favourable", "text": "Venus-Saturn: honour from civic, military or government figures, a fine partner, and an inflow of money, goods and comforts."}
+  ]
+}

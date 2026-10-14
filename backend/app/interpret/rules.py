@@ -525,11 +525,16 @@ def match(chart: Chart, yogas: dict | None = None, rules: tuple[dict, ...] | Non
 
 def match_period(chart: Chart, md: str, ad: str | None = None, yogas: dict | None = None,
                  rules: tuple[dict, ...] | None = None) -> list[dict]:
-    """Dasha rules for a mahadasha (``ad`` is None) or for one antardasha within it."""
+    """Dasha rules for a mahadasha (``ad`` is None) or for one antardasha within it.
+
+    A rule's period may use ``"any"`` for ``md`` (every mahadasha) or ``ad`` (every antardasha)."""
     ctx = Context(chart, yogas, md, ad)
     out = []
     for r in (rules if rules is not None else load_rules()):
-        if r["kind"] != "dasha" or r["period"]["md"] not in (md, "any") or r["period"].get("ad") != ad:
+        if r["kind"] != "dasha" or r["period"]["md"] not in (md, "any"):
+            continue
+        rule_ad = r["period"].get("ad")
+        if not (rule_ad == ad or (rule_ad == "any" and ad is not None)):
             continue
         hit = _apply(r, ctx)
         if hit:

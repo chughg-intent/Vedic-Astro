@@ -118,7 +118,12 @@ def test_dasha_rules_match_only_their_period(chart, library):
     assert md_only and all(m["period"] == {"md": "Jupiter", "ad": None} for m in md_only)
     assert any(m["id"] == "bphs-sharma.49.45-48" for m in md_only)  # Jupiter in the 10th
     sub = R.match_period(chart, "Sun", "Jupiter", yogas)
-    assert sub and all(m["source"]["chapter"] == 54 for m in sub)
+    by_book = {m["source"]["book"] for m in sub}
+    assert by_book == {"bphs-sharma", "phaladeepika-sastri"}
+    assert all(m["source"]["chapter"] == 54 for m in sub if m["source"]["book"] == "bphs-sharma")
+    assert all(m["period"] == {"md": "Sun", "ad": "Jupiter"} for m in sub)
+    # rules for "any" sub-period never fire on a mahadasha-only query
+    assert not any(".20.ad." in m["id"] or m["id"].endswith(".20.29") for m in md_only)
     assert R.match(chart, yogas) and not any(m["id"].startswith("bphs-sharma.49") for m in R.match(chart, yogas))
 
 

@@ -19,7 +19,7 @@ committed. Only these paraphrases are.
 
 ## Coverage
 
-843 rules (532 from BPHS, 311 from Phaladeepika). "Encoded" counts rules, not verses; one verse can yield several rules and several
+899 rules (532 from BPHS, 367 from Phaladeepika). "Encoded" counts rules, not verses; one verse can yield several rules and several
 verses can merge into one.
 
 | Ch. | Subject | File | Rules | Status |
@@ -47,11 +47,12 @@ verses can merge into one.
 | VIII | Each planet in each of the twelve houses | 108 | Complete (all 9 × 12) |
 | IX | Each rising sign (also applied to the Moon's sign); dasha of a planet by its sign | 16 | Complete except combust-planet dasha (policy) |
 | XVIII | Two-planet conjunctions; the Moon's sign aspected by each planet | 85 | Moon's-navamsa verses (12–17) not yet encoded |
+| XX | Dasha and sub-period of each house lord, strong or weak; sub-period lord's place from the dasha lord; kendra–trikona lords | 53 | Transit-modified and death-timing verses left out |
+| XXI | Fixed sub-period readings | 3 | Only the three pairs missing from the BPHS scan |
 | XXVI | Transits from the natal Moon, with vedha (obstruction), sign dignity and Ashtakavarga modifiers | 87 | Moon's own transits and the star-based tables left out |
 
 Not yet encoded from Phaladeepika: yogas (VI–VII, much overlaps BPHS), the 7th house and
-children (X, XII), general effects of houses (XV–XVI), dashas of house lords (XX–XXI),
-Ashtakavarga (XXIII–XXIV).
+children (X, XII), general effects of houses (XV–XVI), Ashtakavarga (XXIII–XXIV).
 
 Every file has a `skipped` list naming the verses left out and why.
 
@@ -71,8 +72,9 @@ named diseases or 'maraka' lordship. A rule that lost such a clause lists what w
 
 Roughly 27 PDF pages of Volume 2 are the wrong page (a different page of the book scanned in
 their place), so the corresponding printed pages are missing. In the dasha chapters this loses
-printed pages 219, 353 and 395, and with them three antardasha sections that could not be
-encoded: **Mercury–Mercury**, **Mercury–Saturn** and **Venus–Saturn**. Moon–Mars has only its
+printed pages 219, 353 and 395, and with them three antardasha sections: **Mercury–Mercury**,
+**Mercury–Saturn** and **Venus–Saturn**. These three are now covered from Phaladeepika
+Adh. XXI instead (unconditional readings). Moon–Mars has only its
 unfavourable half, and Jupiter–Rahu likewise. A complete copy of those pages would fill the gaps.
 
 ## File format
@@ -103,7 +105,8 @@ unfavourable half, and Jupiter–Rahu likewise. A complete copy of those pages w
 - `kind: "transit"` rules are evaluated against current positions (`match_transits`) and may use
   the `transit_*` predicates, which are rejected anywhere else.
 - `kind: "dasha"` rules need `"period": {"md": "Sun"}` (mahadasha; `"any"` matches all nine) or
-  `{"md": "Sun", "ad": "Moon"}` (antardasha), and may use the references `MD` and `AD`.
+  `{"md": "Sun", "ad": "Moon"}` (antardasha; `"ad": "any"` matches every antardasha), and may use
+  the references `MD` and `AD`.
 - `note` records an approximation or a doubt about the printed text. Unknown keys are ignored.
 
 The loader validates every file on first use and rejects unknown predicates, planets, signs,
