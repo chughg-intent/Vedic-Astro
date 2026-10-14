@@ -52,14 +52,14 @@ cites the chart factor and the source rule.
 ### Next (phase 2 — interpretation from the reference books)
 - [x] Get the books into the project (`knowledge/books/`, git-ignored); re-OCR'd in English
       because the scans' text layer is unusable (`knowledge/tools/`)
-- [x] Rule library: 756 paraphrased `condition → effect` rules with book/chapter/verse/page
+- [x] Rule library: 843 paraphrased `condition → effect` rules with book/chapter/verse/page
       (`knowledge/rules/`, see its README for coverage, format and condition language)
       — house effects (ch. 13–25), house lords, functional nature, yogas (ch. 36–44, 77),
       mahadasha and 78/81 antardasha results; Phaladeepika (planets in houses, rising signs,
-      profession, conjunctions)
+      profession, conjunctions, transits)
 - [x] Report tab shows matched readings per life area and for the current dasha period, with citations
 - [x] Rule matcher (`interpret/rules.py`), evaluated directly on the chart; `/api/chart` returns
-      `interpretation.natal` and `interpretation.current_period`
+      `interpretation.natal`, `interpretation.current_period` and `interpretation.transits`
 - [ ] Extend the library: planets/signs (ch. 3–4), Nabhasa yogas (ch. 37),
       avasthas (ch. 47), house-lord dashas (ch. 50); Jaimini chapters once the engine computes karakas/arudhas
 - [ ] Replace the dignity-based `strong`/`weak` approximation with validated Shadbala

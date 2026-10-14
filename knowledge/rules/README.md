@@ -19,7 +19,7 @@ committed. Only these paraphrases are.
 
 ## Coverage
 
-756 rules (532 from BPHS, 224 from Phaladeepika). "Encoded" counts rules, not verses; one verse can yield several rules and several
+843 rules (532 from BPHS, 311 from Phaladeepika). "Encoded" counts rules, not verses; one verse can yield several rules and several
 verses can merge into one.
 
 | Ch. | Subject | File | Rules | Status |
@@ -47,10 +47,11 @@ verses can merge into one.
 | VIII | Each planet in each of the twelve houses | 108 | Complete (all 9 × 12) |
 | IX | Each rising sign (also applied to the Moon's sign); dasha of a planet by its sign | 16 | Complete except combust-planet dasha (policy) |
 | XVIII | Two-planet conjunctions; the Moon's sign aspected by each planet | 85 | Moon's-navamsa verses (12–17) not yet encoded |
+| XXVI | Transits from the natal Moon, with vedha (obstruction), sign dignity and Ashtakavarga modifiers | 87 | Moon's own transits and the star-based tables left out |
 
 Not yet encoded from Phaladeepika: yogas (VI–VII, much overlaps BPHS), the 7th house and
 children (X, XII), general effects of houses (XV–XVI), dashas of house lords (XX–XXI),
-Ashtakavarga (XXIII–XXIV) and transits (XXVI).
+Ashtakavarga (XXIII–XXIV).
 
 Every file has a `skipped` list naming the verses left out and why.
 
@@ -99,6 +100,8 @@ unfavourable half, and Jupiter–Rahu likewise. A complete copy of those pages w
 - `variants` add their text (and may override `tone`) when their own condition also holds.
 - `areas` are the life-area keys from `backend/app/interpret/facts.py`, plus `general`.
 - `tone` is `favourable`, `challenging`, `mixed` or `neutral`.
+- `kind: "transit"` rules are evaluated against current positions (`match_transits`) and may use
+  the `transit_*` predicates, which are rejected anywhere else.
 - `kind: "dasha"` rules need `"period": {"md": "Sun"}` (mahadasha; `"any"` matches all nine) or
   `{"md": "Sun", "ad": "Moon"}` (antardasha), and may use the references `MD` and `AD`.
 - `note` records an approximation or a doubt about the printed text. Unknown keys are ignored.
@@ -134,6 +137,10 @@ counted from that planet.
 | `count_in_houses` | `[group, houses, min, max?]` | number of the group in those houses |
 | `all_in_houses` | `[group, houses]` | every member of the group (nodes excluded) is in those houses |
 | `waxing_moon` | `true/false` | |
+| `transit_in` | `[planet, houses]` | transit rules: the transiting planet's house counted from the natal Moon |
+| `transit_occupied` | `[houses, exempt planets]` | transit rules: some other planet is transiting those houses (vedha) |
+| `transit_dignity` | `[planet, labels]` | transit rules: dignity of the transiting planet (natural friendships) |
+| `transit_bindus` | `[planet, min, max?]` | transit rules: bindus in the planet's own natal Ashtakavarga for the sign it is transiting |
 | `yoga` / `dosha` | `"name"` | the engine detected a yoga/dosha whose name starts with this |
 | `all` / `any` / `not` | list / list / condition | combinators |
 

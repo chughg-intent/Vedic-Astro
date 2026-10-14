@@ -218,6 +218,26 @@ function Transits({ data }: { data: ChartResponse }) {
         </tbody>
       </table>
       <p>Sade Sati: {t.sade_sati.active ? t.sade_sati.phase : "not active"} · Shani Dhaiya: {t.shani_dhaiya.active ? t.shani_dhaiya.type : "not active"}</p>
+      <TransitReadings data={data} />
+    </div>
+  );
+}
+
+// Slow planets first: their transits shape months or years, the fast ones only weeks.
+const TRANSIT_ORDER = ["saturn", "rahu", "ketu", "jupiter", "mars", "sun", "venus", "mercury"];
+const transitRank = (m: RuleMatch) => TRANSIT_ORDER.findIndex((p) => m.id.includes(`.26.${p}.`));
+
+function TransitReadings({ data }: { data: ChartResponse }) {
+  const readings = [...data.interpretation.transits].sort((a, b) => transitRank(a) - transitRank(b));
+  if (readings.length === 0) return null;
+  return (
+    <div className="period">
+      <h3>Transits now</h3>
+      <p className="muted">
+        Judged from the natal Moon, as of {new Date(data.transits.as_of).toLocaleDateString()}. Saturn stays in a sign about
+        2½ years, Rahu and Ketu about 1½, Jupiter about a year; the Sun, Mercury and Venus about a month, Mars about six weeks.
+      </p>
+      <ul className="readings">{readings.map((m) => <Reading key={m.id} m={m} />)}</ul>
     </div>
   );
 }
@@ -285,6 +305,7 @@ function Report({ data }: { data: ChartResponse }) {
         so treat each as one factor, not a verdict.
       </p>
       <CurrentPeriod data={data} />
+      <TransitReadings data={data} />
       {general.length > 0 && (
         <details className="area" open>
           <summary><strong>Overview</strong><span className="count">{general.length}</span></summary>

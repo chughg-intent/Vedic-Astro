@@ -62,6 +62,7 @@ def chart(inp: BirthInput):
     av = ashtakavarga(c)
     now = datetime.now(timezone.utc)
     current = dasha_mod.current_periods(dashas, now)
+    gochara = transits(c, now)
 
     return {
         "input": inp.model_dump(mode="json"),
@@ -79,12 +80,14 @@ def chart(inp: BirthInput):
         **yogas,
         "ashtakavarga": av,
         "shadbala": shadbala(c),
-        "transits": transits(c, now),
+        "transits": gochara,
         "life_areas": extract(c, yogas, dashas, av),
         "interpretation": {
             "natal": rules.match(c, yogas),
             "current_period": [m for ad in (None, *current[1:2]) if current
                                for m in rules.match_period(c, current[0], ad, yogas)],
+            "transits": rules.match_transits(c, {t["name"]: t["longitude"] for t in gochara["planets"]},
+                                             av["bav"], yogas),
         },
     }
 

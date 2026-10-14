@@ -40,10 +40,15 @@ def _as_list(x) -> list:
 
 
 class Context:
-    """A chart plus (for dasha rules) the running period lords."""
+    """A chart plus (for dasha rules) the running period lords, or (for transit rules) the
+    current transit longitudes and the natal Ashtakavarga."""
 
-    def __init__(self, chart: Chart, yogas: dict | None = None, md: str | None = None, ad: str | None = None):
+    def __init__(self, chart: Chart, yogas: dict | None = None, md: str | None = None, ad: str | None = None,
+                 transit: dict[str, float] | None = None, bav: dict[str, list[int]] | None = None):
         self.chart, self.md, self.ad = chart, md, ad
+        self.transit = transit or {}
+        self.transit_signs = {q: int(lon // 30) for q, lon in self.transit.items()}
+        self.bav = bav or {}
         self.yogas = {y["name"].lower() for y in (yogas or {}).get("yogas", [])}
         self.doshas = {d["name"].lower() for d in (yogas or {}).get("doshas", []) if d.get("present")}
 
@@ -84,8 +89,11 @@ class Context:
             return f"the {ordinal(spec)} house"
         return f"the {ordinal(spec[1])} from {self.label(spec[0])}"
 
-    def dignity(self, p: str) -> str:
-        d = dignity(p, self.chart.longitudes[p], self.chart.signs)
+    def dignity(self, p: str, transit: bool = False) -> str:
+        if transit:  # natural friendships: temporary ones are a natal-chart concept
+            d = dignity(p, self.transit[p])
+        else:
+            d = dignity(p, self.chart.longitudes[p], self.chart.signs)
         if d == "own sign":
             return "own"
         if "friend" in d:
@@ -264,6 +272,38 @@ def _waxing_moon(c: Context, a):
     return w == bool(a), f"Moon {'waxing' if w else 'waning'}"
 
 
+def _transit_house(c: Context, p: str) -> int:
+    if p not in c.transit:
+        raise RuleError(f"no transit position for {p}")
+    return house_from(c.chart.signs["Moon"], c.transit_signs[p])
+
+
+def _transit_in(c: Context, a):
+    """[planet, houses] — the transiting planet's house counted from the natal Moon."""
+    h = _transit_house(c, a[0])
+    return h in _as_list(a[1]), f"transiting {a[0]} in the {ordinal(h)} from the natal Moon ({SIGNS[c.transit_signs[a[0]]]})"
+
+
+def _transit_occupied(c: Context, a):
+    """[houses, exempt planets] — some transiting planet, other than the exempt ones, is in those houses."""
+    exempt = set(_as_list(a[1])) if len(a) > 1 else set()
+    hits = [q for q in c.transit if q not in exempt and _transit_house(c, q) in _as_list(a[0])]
+    where = ", ".join(f"{q} in the {ordinal(_transit_house(c, q))}" for q in hits)
+    return bool(hits), f"transiting {where} from the natal Moon"
+
+
+def _transit_dignity(c: Context, a):
+    d = c.dignity(a[0], transit=True)
+    return d in _as_list(a[1]), f"transiting {a[0]} {_DIGNITY_TEXT[d]}"
+
+
+def _transit_bindus(c: Context, a):
+    """[planet, min, max?] — bindus in the planet's own Ashtakavarga for the sign it is transiting."""
+    n = c.bav[a[0]][c.transit_signs[a[0]]] if a[0] in c.bav else -1
+    hi = a[2] if len(a) > 2 else 8
+    return a[1] <= n <= hi, f"{n} Ashtakavarga bindus for {a[0]} in {SIGNS[c.transit_signs[a[0]]]}"
+
+
 def _yoga(c: Context, a):
     return any(n.startswith(a.lower()) for n in c.yogas), a
 
@@ -283,7 +323,10 @@ PREDICATES = {
     "combust": _combust, "retrograde": _retrograde, "count_dignity": _count_dignity,
     "count_in_houses": _count_in_houses, "all_in_houses": _all_in_houses,
     "waxing_moon": _waxing_moon, "yoga": _yoga, "dosha": _dosha,
+    "transit_in": _transit_in, "transit_occupied": _transit_occupied,
+    "transit_dignity": _transit_dignity, "transit_bindus": _transit_bindus,
 }
+TRANSIT_PREDICATES = {"transit_in", "transit_occupied", "transit_dignity", "transit_bindus"}
 
 
 def evaluate(cond: dict | None, ctx: Context) -> tuple[bool, list[str]]:
@@ -326,18 +369,31 @@ def _check_house(spec, where: str, dasha: bool) -> None:
     raise RuleError(f"{where}: bad house {spec!r}")
 
 
-def check_condition(cond, where: str, dasha: bool = False) -> None:
+def check_condition(cond, where: str, dasha: bool = False, transit: bool = False) -> None:
     """Static validation, so a malformed rule fails at load time rather than on some chart."""
     if not isinstance(cond, dict) or len(cond) != 1:
         raise RuleError(f"{where}: a condition is an object with exactly one key, got {cond!r}")
     (op, a), = cond.items()
     if op in ("all", "any"):
         for sub in a:
-            check_condition(sub, where, dasha)
+            check_condition(sub, where, dasha, transit)
     elif op == "not":
-        check_condition(a, where, dasha)
+        check_condition(a, where, dasha, transit)
     elif op not in PREDICATES:
         raise RuleError(f"{where}: unknown predicate {op!r}")
+    elif op in TRANSIT_PREDICATES:
+        if not transit:
+            raise RuleError(f"{where}: {op} is only allowed in transit rules")
+        if op == "transit_occupied":
+            if not all(isinstance(h, int) and 1 <= h <= 12 for h in _as_list(a[0])) or \
+                    not set(_as_list(a[1]) if len(a) > 1 else []) <= set(PLANETS):
+                raise RuleError(f"{where}: bad transit_occupied {a!r}")
+        elif a[0] not in PLANETS or (op == "transit_bindus" and a[0] not in PLANETS[:7]):
+            raise RuleError(f"{where}: bad planet in {op} {a!r}")
+        elif op == "transit_in" and not all(isinstance(h, int) and 1 <= h <= 12 for h in _as_list(a[1])):
+            raise RuleError(f"{where}: bad houses {a[1]!r}")
+        elif op == "transit_dignity" and not set(_as_list(a[1])) <= DIGNITIES:
+            raise RuleError(f"{where}: unknown dignity in {a[1]!r}")
     elif op in ("strong", "weak", "combust", "retrograde"):
         _check_ref(a, where, dasha)
     elif op in ("in_house", "in_house_from", "rules"):
@@ -391,8 +447,8 @@ def check_condition(cond, where: str, dasha: bool = False) -> None:
 def _load_file(path: Path) -> list[dict]:
     doc = json.loads(path.read_text())
     src, kind = doc["source"], doc.get("kind", "natal")
-    if kind not in ("natal", "dasha"):
-        raise RuleError(f"{path.name}: kind must be natal or dasha")
+    if kind not in ("natal", "dasha", "transit"):
+        raise RuleError(f"{path.name}: kind must be natal, dasha or transit")
     rules = []
     for raw in doc["rules"]:
         rid = raw.get("id") or f"{src['book']}.{src['chapter']}.{raw['verse']}"
@@ -407,9 +463,9 @@ def _load_file(path: Path) -> list[dict]:
         if kind == "dasha" and "md" not in raw.get("period", {}):
             raise RuleError(f"{where}: dasha rules need a period with at least 'md'")
         if raw.get("when"):
-            check_condition(raw["when"], where, kind == "dasha")
+            check_condition(raw["when"], where, kind == "dasha", kind == "transit")
         for v in raw.get("variants", []):
-            check_condition(v["when"], where, kind == "dasha")
+            check_condition(v["when"], where, kind == "dasha", kind == "transit")
             if not v.get("text") or v.get("tone", "mixed") not in TONES:
                 raise RuleError(f"{where}: bad variant")
         if not raw["text"] and not raw.get("variants"):
@@ -479,3 +535,11 @@ def match_period(chart: Chart, md: str, ad: str | None = None, yogas: dict | Non
         if hit:
             out.append({**hit, "period": {"md": md, "ad": ad}})
     return out
+
+
+def match_transits(chart: Chart, transit: dict[str, float], bav: dict[str, list[int]] | None = None,
+                   yogas: dict | None = None, rules: tuple[dict, ...] | None = None) -> list[dict]:
+    """Transit (gochara) rules for current positions; ``transit`` maps planet -> sidereal longitude."""
+    ctx = Context(chart, yogas, transit=transit, bav=bav)
+    hits = (_apply(r, ctx) for r in (rules if rules is not None else load_rules()) if r["kind"] == "transit")
+    return [h for h in hits if h]

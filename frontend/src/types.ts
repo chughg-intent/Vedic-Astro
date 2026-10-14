@@ -98,7 +98,7 @@ export interface ChartResponse {
     shani_dhaiya: { active: boolean; type: string | null };
   };
   life_areas: Record<string, LifeArea>;
-  interpretation: { natal: RuleMatch[]; current_period: RuleMatch[] };
+  interpretation: { natal: RuleMatch[]; current_period: RuleMatch[]; transits: RuleMatch[] };
 }
 
 export type Tone = "favourable" | "challenging" | "mixed" | "neutral";

@@ -164,3 +164,19 @@ def test_navamsa_lord_predicate(chart):
     assert not R.evaluate({"in_navamsa_of": ["Sun", [q for q in PLANETS[:7] if q != lord]]}, ctx)[0]
     with pytest.raises(R.RuleError):
         R.check_condition({"in_navamsa_of": ["Sun", "Rahu"]}, "test")
+
+
+def test_transit_rules_judge_from_the_natal_moon_with_vedha(chart, library):
+    moon = chart.signs["Moon"]
+    lon = lambda house: ((moon + house - 1) % 12) * 30 + 15.0  # middle of the n-th sign from the Moon
+    others = {p: lon(1) for p in PLANETS}
+    # Jupiter in the 2nd from the Moon (Aquarius here, a neutral sign) is favourable; its vedha point is the 12th.
+    clear = R.match_transits(chart, {**others, "Jupiter": lon(2)})
+    jup = next(m for m in clear if m["id"] == "phaladeepika-sastri.26.jupiter.2")
+    assert jup["tone"] == "favourable" and "the 2nd from the natal Moon" in jup["factors"][0]
+    blocked = R.match_transits(chart, {**others, "Jupiter": lon(2), "Venus": lon(12)})
+    jup = next(m for m in blocked if m["id"] == "phaladeepika-sastri.26.jupiter.2")
+    assert jup["tone"] == "mixed" and "vedha" in jup["text"]
+    assert all(r["kind"] != "transit" for r in library if r["source"]["book"] == "bphs-sharma")
+    with pytest.raises(R.RuleError):
+        R.check_condition({"transit_in": ["Jupiter", 5]}, "natal rule")  # transit predicates only in transit rules
