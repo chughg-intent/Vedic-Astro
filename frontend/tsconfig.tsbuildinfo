@@ -1,1 +1,1 @@
-{"root":["./src/App.tsx","./src/api.ts","./src/main.tsx","./src/types.ts","./src/components/BirthForm.tsx","./src/components/ChartDiagram.tsx","./src/components/Results.tsx"],"version":"5.6.3"}
+{"root":["./src/app.tsx","./src/api.ts","./src/main.tsx","./src/types.ts","./src/components/birthform.tsx","./src/components/chartdiagram.tsx","./src/components/results.tsx"],"version":"5.6.3"}

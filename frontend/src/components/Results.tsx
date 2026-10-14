@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChartResponse, ChartStyle, DashaPeriod, SIGNS, SIGN_ABBR } from "../types";
+import { ChartResponse, ChartStyle, DashaPeriod, RuleMatch, SIGNS, SIGN_ABBR } from "../types";
 import ChartDiagram from "./ChartDiagram";
 
 const TABS = ["Charts", "Planets", "Dasha", "Yogas & Doshas", "Strength", "Transits", "Report"] as const;
@@ -222,33 +222,101 @@ function Transits({ data }: { data: ChartResponse }) {
   );
 }
 
+const BOOKS: Record<string, string> = { "bphs-sharma": "BPHS" };
+
+function Reading({ m }: { m: RuleMatch }) {
+  const src = m.source;
+  return (
+    <li className={`reading ${m.tone}`}>
+      <p>{m.tone !== "neutral" && <span className={`tone ${m.tone}`}>{m.tone}</span>}{m.text}</p>
+      {m.factors.length > 0 && <p className="why">Because: {m.factors.join("; ")}</p>}
+      <p className="cite" title={src.chapter_title}>
+        {BOOKS[src.book] ?? src.book} ch. {src.chapter}, v. {src.verse} · vol. {src.volume} p. {src.page}
+      </p>
+    </li>
+  );
+}
+
+function findPeriod(periods: DashaPeriod[], chain: string[]): DashaPeriod[] {
+  const out: DashaPeriod[] = [];
+  let level: DashaPeriod[] | undefined = periods;
+  const now = Date.now();
+  for (const lord of chain) {
+    const hit: DashaPeriod | undefined = level?.find((p) => p.lord === lord && new Date(p.start).getTime() <= now && now < new Date(p.end).getTime());
+    if (!hit) break;
+    out.push(hit);
+    level = hit.sub;
+  }
+  return out;
+}
+
+function CurrentPeriod({ data }: { data: ChartResponse }) {
+  const [md, ad] = findPeriod(data.dasha.periods, data.dasha.current.slice(0, 2));
+  if (!md) return null;
+  const forMd = data.interpretation.current_period.filter((m) => !m.period?.ad);
+  const forAd = data.interpretation.current_period.filter((m) => m.period?.ad);
+  const span = (p: DashaPeriod) => `${fmtDate(p.start)} – ${fmtDate(p.end)}`;
+  return (
+    <div className="period">
+      <h3>Current period</h3>
+      <p className="muted">{md.lord} mahadasha ({span(md)}){ad && <> · {ad.lord} antardasha ({span(ad)})</>}</p>
+      {forMd.length > 0 && <><h4>{md.lord} mahadasha</h4><ul className="readings">{forMd.map((m) => <Reading key={m.id} m={m} />)}</ul></>}
+      {ad && <h4>{md.lord}–{ad.lord} antardasha</h4>}
+      {ad && (forAd.length > 0
+        ? <ul className="readings">{forAd.map((m) => <Reading key={m.id} m={m} />)}</ul>
+        : <p className="muted">No rule from the texts applies to this sub-period for this chart.</p>)}
+    </div>
+  );
+}
+
 function Report({ data }: { data: ChartResponse }) {
+  // A rule with no chart factors is a general reading principle, not a statement about this chart.
+  const natal = data.interpretation.natal.filter((m) => m.factors.length > 0);
+  const byArea = (key: string) => natal.filter((m) => m.areas.includes(key));
+  const general = byArea("general");
   return (
     <div className="card">
       <p className="notice">
-        The written interpretation will be generated from the reference texts once the knowledge base is loaded.
-        Below are the chart factors each section of the report will be judged from.
+        Readings below are paraphrased from Brihat Parasara Hora Sastra and shown only where this chart meets the
+        text's condition. Classical rules can contradict one another; the texts weigh them by planetary strength,
+        so treat each as one factor, not a verdict.
       </p>
-      {Object.entries(data.life_areas).map(([key, a]) => (
-        <details key={key} className="area">
-          <summary><strong>{a.title}</strong></summary>
-          <ul>
-            {a.houses.map((h) => (
-              <li key={h.house}>
-                House {h.house} ({h.signifies}) in {h.sign}; lord {h.lord.planet} in house {h.lord.house} ({h.lord.sign}, {h.lord.dignity}
-                {h.lord.retrograde && h.lord.planet !== "Rahu" && h.lord.planet !== "Ketu" ? ", retrograde" : ""}{h.lord.combust ? ", combust" : ""})
-                {h.occupants.length > 0 && <>; occupied by {h.occupants.join(", ")}</>}
-                {h.aspected_by.length > 0 && <>; aspected by {h.aspected_by.join(", ")}</>}
-              </li>
-            ))}
-            {a.karakas.map((k) => (
-              <li key={k.planet}>Karaka {k.planet}: house {k.house}, {k.sign}, {k.dignity}
-                {k.conjunctions.length > 0 && <>; with {k.conjunctions.join(", ")}</>}</li>
-            ))}
-            {a.yogas.length > 0 && <li>Yogas: {a.yogas.map((y) => y.name).join(", ")}</li>}
-          </ul>
+      <CurrentPeriod data={data} />
+      {general.length > 0 && (
+        <details className="area" open>
+          <summary><strong>Overview</strong><span className="count">{general.length}</span></summary>
+          <ul className="readings">{general.map((m) => <Reading key={m.id} m={m} />)}</ul>
         </details>
-      ))}
+      )}
+      {Object.entries(data.life_areas).map(([key, a]) => {
+        const readings = byArea(key);
+        return (
+          <details key={key} className="area">
+            <summary><strong>{a.title}</strong><span className="count">{readings.length}</span></summary>
+            {readings.length > 0
+              ? <ul className="readings">{readings.map((m) => <Reading key={m.id} m={m} />)}</ul>
+              : <p className="muted">No rule from the encoded texts applies to this area for this chart yet.</p>}
+            <details className="factors">
+              <summary>Chart factors for this area</summary>
+              <ul>
+                {a.houses.map((h) => (
+                  <li key={h.house}>
+                    House {h.house} ({h.signifies}) in {h.sign}; lord {h.lord.planet} in house {h.lord.house} ({h.lord.sign}, {h.lord.dignity}
+                    {h.lord.retrograde && h.lord.planet !== "Rahu" && h.lord.planet !== "Ketu" ? ", retrograde" : ""}{h.lord.combust ? ", combust" : ""})
+                    {h.occupants.length > 0 && <>; occupied by {h.occupants.join(", ")}</>}
+                    {h.aspected_by.length > 0 && <>; aspected by {h.aspected_by.join(", ")}</>}
+                  </li>
+                ))}
+                {a.karakas.map((k) => (
+                  <li key={k.planet}>Karaka {k.planet}: house {k.house}, {k.sign}, {k.dignity}
+                    {k.conjunctions.length > 0 && <>; with {k.conjunctions.join(", ")}</>}</li>
+                ))}
+                {a.yogas.length > 0 && <li>Yogas: {a.yogas.map((y) => y.name).join(", ")}</li>}
+              </ul>
+            </details>
+          </details>
+        );
+      })}
     </div>
   );
 }

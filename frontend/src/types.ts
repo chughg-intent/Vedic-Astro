@@ -98,6 +98,19 @@ export interface ChartResponse {
     shani_dhaiya: { active: boolean; type: string | null };
   };
   life_areas: Record<string, LifeArea>;
+  interpretation: { natal: RuleMatch[]; current_period: RuleMatch[] };
+}
+
+export type Tone = "favourable" | "challenging" | "mixed" | "neutral";
+
+export interface RuleMatch {
+  id: string;
+  areas: string[];
+  tone: Tone;
+  text: string;
+  factors: string[];
+  source: { book: string; volume: number; chapter: number; chapter_title?: string; verse: string; page: number };
+  period?: { md: string; ad: string | null };
 }
 
 export interface LifeArea {
