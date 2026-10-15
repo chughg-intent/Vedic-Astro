@@ -34,8 +34,8 @@ otherwise the built-in Moshier ephemeris (~1 arc-second) is used.
 * `POST /api/chart` — full chart (planets, houses, 16 vargas, Vimshottari dasha, yogas, doshas,
   Ashtakavarga, Shadbala, transits, per-life-area facts) and `interpretation`: the readings from the
   rule library (`knowledge/rules/`) that match the chart, the current dasha period and current transits
-* `POST /api/report` — same input; Claude (`claude-opus-5-5`) writes a readable report from those
-  readings, citing a rule id for each paragraph. Needs `ANTHROPIC_API_KEY` in the backend's
+* `POST /api/report` — same input; Claude (`claude-opus-5-5`) writes a house-by-house report from
+  those readings, tracking the rule ids behind each paragraph. Needs `ANTHROPIC_API_KEY` in the backend's
   environment. Only chart factors and readings are sent to the API — not the name, birth date,
   time or place. Takes about a minute.
 

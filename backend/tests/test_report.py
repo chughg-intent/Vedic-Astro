@@ -49,30 +49,39 @@ def test_model_input_carries_readings_but_no_birth_data(chart):
     for private in ("Test Person", "1990-05-15", "14:30", "Delhi", "28.65"):
         assert private not in blob
     assert payload["natal_readings"] and all(r["because"] for r in payload["natal_readings"])
-    assert {a["key"] for a in payload["life_areas"]} == set(R.AREAS)
+    assert [h["house"] for h in payload["houses"]] == list(range(1, 13))
 
 
-def test_report_keeps_only_known_citations_and_orders_sections(chart):
+def test_report_is_house_by_house_with_known_citations_and_the_name_filled_in(chart):
     real = next(m["id"] for m in chart["interpretation"]["natal"] if m["factors"])
     fake_report = {
-        "overview": [{"text": "Overview.", "rule_ids": [real, "made.up.id"]}],
-        "sections": [
-            {"area": "wealth", "summary": "W", "paragraphs": [{"text": "Money.", "rule_ids": [real]}]},
-            {"area": "career", "summary": "C", "paragraphs": [{"text": "Work.", "rule_ids": []}]},
-            {"area": "health", "summary": "H", "paragraphs": []},
+        "opening": [{"text": "{NAME}, yours is a chart of steady effort.", "rule_ids": [real, "made.up.id"]}],
+        "houses": [
+            {"house": 5, "intro": "The fifth house refers to children.", "paragraphs": [{"text": "Mars is in your 5th.", "rule_ids": [real]}]},
+            {"house": 3, "intro": "The third house refers to siblings.", "paragraphs": [{"text": "{NAME}, since the 3rd lord is in the 7th, you prefer employment.", "rule_ids": []}]},
+            {"house": 8, "intro": "Empty.", "paragraphs": []},
+            {"house": 3, "intro": "Duplicate.", "paragraphs": [{"text": "Again.", "rule_ids": []}]},
         ],
         "current_period": [{"text": "Now.", "rule_ids": []}],
         "transits": [{"text": " ", "rule_ids": []}],
     }
     client = FakeClient(json.dumps(fake_report))
     out = R.write_report(chart, client=client)["report"]
-    assert out["overview"] == [{"text": "Overview.", "rule_ids": [real]}]
-    assert [s["area"] for s in out["sections"]] == ["career", "wealth"]  # LIFE_AREAS order; empty section dropped
+    assert out["opening"] == [{"text": "Test, yours is a chart of steady effort.", "rule_ids": [real]}]
+    assert [h["house"] for h in out["houses"]] == [3, 5]  # house order; empty and duplicate dropped
+    assert out["houses"][0]["title"] == "Siblings"
+    assert out["houses"][0]["paragraphs"][0]["text"].startswith("Test, since the 3rd lord")
     assert out["transits"] == []
     call = client.calls[0]
     assert call["model"] == "claude-opus-5-5" and call["fallbacks"] == "default"
     assert call["betas"] == ["server-side-fallback-2026-07-01"]
     assert call["output_config"]["format"]["schema"] == R.REPORT_SCHEMA
+    assert "Test" not in json.dumps(call["messages"])
+
+
+def test_name_placeholder_without_a_name():
+    assert R.personalise("{NAME}, since the Sun is strong, you lead.", None) == "Since the Sun is strong, you lead."
+    assert R.personalise("{NAME}, since x.", "  Gaurav Chugh ") == "Gaurav, since x."
 
 
 def test_refusal_and_truncation_raise(chart):

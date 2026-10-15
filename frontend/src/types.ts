@@ -139,8 +139,8 @@ export interface ReportParagraph { text: string; rule_ids: string[] }
 
 export interface WrittenReport {
   report: {
-    overview: ReportParagraph[];
-    sections: Array<{ area: string; summary: string; paragraphs: ReportParagraph[] }>;
+    opening: ReportParagraph[];
+    houses: Array<{ house: number; title: string; intro: string; paragraphs: ReportParagraph[] }>;
     current_period: ReportParagraph[];
     transits: ReportParagraph[];
   };

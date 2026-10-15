@@ -64,9 +64,9 @@ cites the chart factor and the source rule.
       avasthas (ch. 47), house-lord dashas (ch. 50); Jaimini chapters once the engine computes karakas/arudhas
 - [ ] Replace the dignity-based `strong`/`weak` approximation with validated Shadbala
 - [x] Report writer (`interpret/report.py`, `POST /api/report`): Claude Opus 5.5 turns the matched
-      readings into an overview, current period, transits and one section per life area, each
-      paragraph citing its rule ids (unknown ids are dropped); structured JSON output, server-side
-      refusal fallback; birth data is never sent
+      readings into a house-by-house reading (what the house governs, then factor-led paragraphs),
+      plus current period and transits; rule ids are tracked per paragraph but not shown; the name is
+      filled in server-side from a placeholder, so birth data is never sent
 - [ ] Evaluate report quality on a set of real charts (grounding, balance, policy adherence)
 - [ ] PDF export of the report
 

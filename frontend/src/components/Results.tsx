@@ -302,32 +302,11 @@ type ReportState =
   | { status: "error"; message: string }
   | { status: "done"; report: WrittenReport };
 
-function Citations({ ids, readings }: { ids: string[]; readings: Map<string, RuleMatch> }) {
-  if (ids.length === 0) return null;
-  return (
-    <span className="cites">
-      {ids.map((id) => {
-        const m = readings.get(id);
-        if (!m) return null;
-        const src = m.source;
-        return (
-          <span key={id} className="cite-chip" title={m.text}>
-            {BOOKS[src.book]?.name ?? src.book} {src.chapter}.{src.verse}
-          </span>
-        );
-      })}
-    </span>
-  );
-}
-
-function Paragraphs({ items, readings }: { items: ReportParagraph[]; readings: Map<string, RuleMatch> }) {
-  return <>{items.map((p, i) => <p key={i} className="prose">{p.text} <Citations ids={p.rule_ids} readings={readings} /></p>)}</>;
+function Paragraphs({ items }: { items: ReportParagraph[] }) {
+  return <>{items.map((p, i) => <p key={i} className="prose">{p.text}</p>)}</>;
 }
 
 function WrittenReportView({ data, written, setWritten }: ReportProps) {
-  const readings = new Map<string, RuleMatch>();
-  [...data.interpretation.natal, ...data.interpretation.current_period, ...data.interpretation.transits]
-    .forEach((m) => readings.set(m.id, m));
   const write = () => {
     setWritten({ status: "loading" });
     fetchReport(data).then((report) => setWritten({ status: "done", report }))
@@ -338,8 +317,8 @@ function WrittenReportView({ data, written, setWritten }: ReportProps) {
       <div className="period">
         <h3>Written report</h3>
         <p className="muted">
-          Claude writes a readable report from the readings below, citing the verse behind each statement. Only the chart
-          factors and readings are sent — not your name, birth date or place. It takes about a minute.
+          Claude writes a house-by-house report from the readings below. Only the chart factors and readings are sent —
+          not your name, birth date or place. It takes about a minute.
         </p>
         {written.status === "error" && <p className="error">{written.message}</p>}
         <button onClick={write} disabled={written.status === "loading"}>
@@ -349,21 +328,20 @@ function WrittenReportView({ data, written, setWritten }: ReportProps) {
     );
   }
   const r = written.report.report;
-  const title = (area: string) => data.life_areas[area]?.title ?? area;
   return (
     <div className="written">
       <h3>Your report</h3>
-      <Paragraphs items={r.overview} readings={readings} />
-      {r.current_period.length > 0 && <><h4>The period you are in</h4><Paragraphs items={r.current_period} readings={readings} /></>}
-      {r.transits.length > 0 && <><h4>Current transits</h4><Paragraphs items={r.transits} readings={readings} /></>}
-      {r.sections.map((s) => (
-        <section key={s.area}>
-          <h4>{title(s.area)}</h4>
-          <p className="summary-line">{s.summary}</p>
-          <Paragraphs items={s.paragraphs} readings={readings} />
+      <Paragraphs items={r.opening} />
+      {r.houses.map((h) => (
+        <section key={h.house}>
+          <h4>{h.title}</h4>
+          <p className="house-intro">{h.intro}</p>
+          <Paragraphs items={h.paragraphs} />
         </section>
       ))}
-      <p className="muted small">Written by {written.report.model} from the matched readings. Hover a source to see the reading it cites.</p>
+      {r.current_period.length > 0 && <section><h4>The Period You Are In</h4><Paragraphs items={r.current_period} /></section>}
+      {r.transits.length > 0 && <section><h4>Current Transits</h4><Paragraphs items={r.transits} /></section>}
+      <p className="muted small">Written by {written.report.model} from the readings listed below.</p>
     </div>
   );
 }

@@ -7,19 +7,36 @@ ids; ids it did not receive are dropped, so a citation always points at a real r
 from __future__ import annotations
 
 import json
+import re
 
 import anthropic
 
-from .facts import LIFE_AREAS
-
 MODEL = "claude-opus-5-5"
-AREAS = list(LIFE_AREAS)
+NAME_TOKEN = "{NAME}"
+
+# Section titles and what each house governs, in report order. The 8th house is framed without
+# longevity, which the sensitive-topics policy excludes.
+HOUSES = {
+    1: ("Personality and Physical Self", "your body, appearance, temperament and the overall direction of life"),
+    2: ("Wealth, Family and Speech", "money and savings, family, food and the way you speak"),
+    3: ("Siblings", "siblings, courage, initiative and communication"),
+    4: ("Property, Education etc.", "property, education, mother, vehicles and general happiness"),
+    5: ("Children, Mind and Intelligence", "children, mind, intelligence and creativity"),
+    6: ("Health, Service and Opponents", "health tendencies, work and service, competition and debts"),
+    7: ("Marriage and Partnerships", "marriage, the spouse and business partnerships"),
+    8: ("Hidden Matters and Inheritance", "research, hidden matters, sudden changes and inheritance"),
+    9: ("Fortune, Father and Dharma", "fortune, the father, religion, higher learning and long journeys"),
+    10: ("Career and Status", "career, profession, status and reputation"),
+    11: ("Gains and Friends", "income, gains, elder siblings, friends and the fulfilment of wishes"),
+    12: ("Expenses, Travel and Liberation", "expenses, foreign lands, solitude and spiritual liberation"),
+}
 
 SYSTEM_PROMPT = """You write horoscope reports for a Vedic (Jyotish) astrology app. You are given the chart's key \
 factors and a list of readings. Each reading is a paraphrase of a classical rule (from Brihat Parasara Hora Sastra or \
 Phaladeepika) that the app has already matched against this chart, with the chart factors that triggered it.
 
-Your job is to turn those readings into a clear, warm, readable report.
+Your job is to turn those readings into a clear, readable report written house by house, in the manner of a \
+traditional astrologer's written reading.
 
 Grounding
 - Use only the readings provided. Do not add predictions, chart facts or classical rules that are not in the input.
@@ -40,14 +57,28 @@ this; do not reintroduce it.
 - Do not frighten. Present challenges as tendencies to be aware of, not certainties, and avoid fatalistic language.
 - Use gender-neutral language for the person and their partner ("spouse", "partner", "children").
 
+Structure
+- One section per house that has readings, using the house numbers and titles given in "houses". Assign each reading \
+to the house its chart factor is about (e.g. "3rd lord in the 7th" belongs to the 3rd house; "Mars in the 5th house" \
+to the 5th). A reading may be used in only one section.
+- Each section starts with "intro": one sentence saying what the house refers to, e.g. "The third house of the \
+horoscope mainly refers to siblings, courage and cleverness."
+- Then 1-4 paragraphs. Open each paragraph with the chart factor behind it, in plain words, then say what it means \
+for the reader - e.g. "Since the lord of your 3rd house is in the 7th, you are better suited to steady employment \
+than to business." or "Mars is placed in your 5th house. You ..." Keep related readings together in one paragraph.
+- "opening": one short paragraph introducing the reading as a whole, drawing out the two or three strongest themes.
+- "current_period": what the running dasha and sub-period suggest. "transits": what the current planetary movements \
+suggest; slow planets (Saturn, Rahu, Ketu, Jupiter) matter more than fast ones.
+- Leave out a house, or leave a part empty, rather than padding it when there is nothing to say.
+
 Style
+- Address the reader as "you", directly and confidently, as an astrologer would ("You will prove a good worker"). \
+Challenges are still framed as tendencies, never as certainties of harm.
+- Where you would address the reader by name, write the placeholder {NAME} followed by a comma at the start of the \
+sentence - e.g. "{NAME}, since the 5th lord is in the 2nd, ...". Use it at most once per section. Never guess a name.
 - Plain English for someone who knows little astrology; introduce Sanskrit terms only with a short gloss.
-- Address the reader as "you". Be specific, not generic; avoid filler and flattery.
-- The overview: 2-3 short paragraphs drawing out the strongest themes across the whole chart.
-- One section per life area that has readings, in the order given. Each: a one-sentence summary, then 1-4 paragraphs.
-- Current period: what the running dasha and sub-period suggest. Transits: what the current planetary movements \
-suggest, noting that slow planets (Saturn, Rahu, Ketu, Jupiter) matter more than fast ones.
-- Leave a section's paragraphs empty rather than padding it when there is nothing to say."""
+- Do not mention books, chapters, verses or rule ids in the text - sources are tracked separately in rule_ids.
+- Be specific, not generic; avoid filler and flattery."""
 
 _PARAGRAPHS = {
     "type": "array",
@@ -61,24 +92,24 @@ _PARAGRAPHS = {
 REPORT_SCHEMA = {
     "type": "object",
     "properties": {
-        "overview": _PARAGRAPHS,
-        "sections": {
+        "opening": _PARAGRAPHS,
+        "houses": {
             "type": "array",
             "items": {
                 "type": "object",
                 "properties": {
-                    "area": {"type": "string", "enum": AREAS},
-                    "summary": {"type": "string"},
+                    "house": {"type": "integer", "enum": list(HOUSES)},
+                    "intro": {"type": "string"},
                     "paragraphs": _PARAGRAPHS,
                 },
-                "required": ["area", "summary", "paragraphs"],
+                "required": ["house", "intro", "paragraphs"],
                 "additionalProperties": False,
             },
         },
         "current_period": _PARAGRAPHS,
         "transits": _PARAGRAPHS,
     },
-    "required": ["overview", "sections", "current_period", "transits"],
+    "required": ["opening", "houses", "current_period", "transits"],
     "additionalProperties": False,
 }
 
@@ -114,7 +145,7 @@ def build_input(chart: dict) -> dict:
             "current_dasha": chart["dasha"]["current"][:2],
             "transits_as_of": chart["transits"]["as_of"][:10],
         },
-        "life_areas": [{"key": k, "title": a["title"]} for k, a in chart["life_areas"].items()],
+        "houses": [{"house": h, "title": t, "refers_to": what} for h, (t, what) in HOUSES.items()],
         # Rules without chart factors are reading principles, not statements about this chart.
         "natal_readings": [_reading(m) for m in interp["natal"] if m["factors"]],
         "current_period_readings": [_reading(m) for m in interp["current_period"]],
@@ -122,21 +153,29 @@ def build_input(chart: dict) -> dict:
     }
 
 
-def _clean(report: dict, known: set[str]) -> dict:
-    """Drop citations of ids the model was not given, and empty sections."""
-    def paragraphs(ps):
-        out = []
-        for p in ps:
-            ids = [i for i in p["rule_ids"] if i in known]
-            if p["text"].strip():
-                out.append({"text": p["text"].strip(), "rule_ids": ids})
-        return out
+def personalise(text: str, name: str | None) -> str:
+    """Put the person's name in place of the placeholder - the name itself is never sent to the model."""
+    name = (name or "").strip()
+    if name:
+        return text.replace(NAME_TOKEN, name.split()[0])
+    # No name: drop "{NAME}, " and capitalise what follows.
+    text = re.sub(r"\{NAME\},?\s*(\w)", lambda m: m.group(1).upper(), text)
+    return text.replace(NAME_TOKEN, "you")
 
-    order = {a: i for i, a in enumerate(AREAS)}
-    sections = [{**s, "paragraphs": paragraphs(s["paragraphs"])} for s in report["sections"]]
-    sections = [s for s in sections if s["paragraphs"]]
-    sections.sort(key=lambda s: order.get(s["area"], len(order)))
-    return {"overview": paragraphs(report["overview"]), "sections": sections,
+
+def _clean(report: dict, known: set[str], name: str | None) -> dict:
+    """Drop citations of ids the model was not given, empty parts, and fill in the name."""
+    def paragraphs(ps):
+        return [{"text": personalise(p["text"].strip(), name), "rule_ids": [i for i in p["rule_ids"] if i in known]}
+                for p in ps if p["text"].strip()]
+
+    houses = []
+    for h in sorted(report["houses"], key=lambda h: h["house"]):
+        ps = paragraphs(h["paragraphs"])
+        if ps and h["house"] in HOUSES and h["house"] not in {x["house"] for x in houses}:
+            houses.append({"house": h["house"], "title": HOUSES[h["house"]][0],
+                           "intro": personalise(h["intro"].strip(), name), "paragraphs": ps})
+    return {"opening": paragraphs(report["opening"]), "houses": houses,
             "current_period": paragraphs(report["current_period"]), "transits": paragraphs(report["transits"])}
 
 
@@ -179,6 +218,6 @@ def write_report(chart: dict, client: anthropic.Anthropic | None = None) -> dict
     except json.JSONDecodeError:
         raise ReportError("The model returned a report that could not be read.")
     usage = message.usage
-    return {"report": _clean(report, known), "model": message.model,
+    return {"report": _clean(report, known, chart["input"].get("name")), "model": message.model,
             "usage": {"input_tokens": usage.input_tokens, "output_tokens": usage.output_tokens,
                       "cache_read_input_tokens": getattr(usage, "cache_read_input_tokens", None)}}

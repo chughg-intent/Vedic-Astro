@@ -94,7 +94,5 @@ details.factors summary { cursor: pointer; color: var(--muted); }
 .written { border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; margin: 16px 0 24px; }
 .written h4 { margin: 18px 0 4px; }
 .prose { margin: 8px 0; line-height: 1.6; }
-.summary-line { margin: 4px 0; font-weight: 600; }
-.cites { white-space: normal; }
-.cite-chip { display: inline-block; font-size: 11px; color: var(--muted); border: 1px solid var(--border); border-radius: 10px; padding: 0 6px; margin: 0 2px; cursor: help; }
+.house-intro { margin: 4px 0; font-style: italic; color: var(--muted); }
 .small { font-size: 12px; }
