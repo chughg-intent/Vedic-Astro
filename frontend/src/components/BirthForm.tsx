@@ -45,30 +45,30 @@ export default function BirthForm({ loading, onSubmit }: Props) {
   return (
     <form className="card form" onSubmit={submit}>
       <h2>Birth details</h2>
-      <div className="grid">
-        <label>Name (optional)
-          <input value={form.name} onChange={(e) => set("name", e.target.value)} />
+      <div className="form-grid">
+        <label><span className="label-text">Name <span className="optional">optional</span></span>
+          <input value={form.name} onChange={(e) => set("name", e.target.value)} placeholder="Your name" />
         </label>
-        <label>Gender (optional)
+        <label><span className="label-text">Gender <span className="optional">optional</span></span>
           <select value={form.gender ?? ""} onChange={(e) => set("gender", (e.target.value || undefined) as BirthInput["gender"])}>
-            <option value="">—</option><option value="male">Male</option>
+            <option value="">Prefer not to say</option><option value="male">Male</option>
             <option value="female">Female</option><option value="other">Other</option>
           </select>
         </label>
-        <label>Date of birth
+        <label><span className="label-text">Date of birth</span>
           <input type="date" required value={form.date} onChange={(e) => set("date", e.target.value)} />
         </label>
-        <label>Time of birth (local)
+        <label><span className="label-text">Time of birth <span className="optional">local time</span></span>
           <input type="time" step={1} required value={form.time} onChange={(e) => set("time", e.target.value)} />
         </label>
-        <label>City
-          <input required value={form.city} onChange={(e) => set("city", e.target.value)} />
+        <label><span className="label-text">City</span>
+          <input required value={form.city} onChange={(e) => set("city", e.target.value)} placeholder="e.g. Jaipur" />
         </label>
-        <label>State / Province
+        <label><span className="label-text">State / Province <span className="optional">optional</span></span>
           <input value={form.state} onChange={(e) => set("state", e.target.value)} />
         </label>
-        <label>Country
-          <input required value={form.country} onChange={(e) => set("country", e.target.value)} />
+        <label><span className="label-text">Country</span>
+          <input required value={form.country} onChange={(e) => set("country", e.target.value)} placeholder="e.g. India" />
         </label>
         <div className="place-lookup">
           <button type="button" className="secondary" disabled={!form.city || !form.country} onClick={findPlace}>
@@ -95,19 +95,21 @@ export default function BirthForm({ loading, onSubmit }: Props) {
         </p>
       )}
 
-      <fieldset className="style-picker">
-        <legend>Chart style</legend>
-        {(["north", "south"] as ChartStyle[]).map((s) => (
-          <label key={s} className="radio">
-            <input type="radio" name="style" checked={form.chart_style === s} onChange={() => set("chart_style", s)} />
-            {s === "north" ? "North Indian" : "South Indian"}
-          </label>
-        ))}
-      </fieldset>
+      <div className="field-row">
+        <span className="field-label">Chart style</span>
+        <div className="segmented" role="group" aria-label="Chart style">
+          {(["north", "south"] as ChartStyle[]).map((st) => (
+            <button key={st} type="button" className={form.chart_style === st ? "active" : ""}
+                    aria-pressed={form.chart_style === st} onClick={() => set("chart_style", st)}>
+              {st === "north" ? "North Indian" : "South Indian"}
+            </button>
+          ))}
+        </div>
+      </div>
 
-      <details>
+      <details className="advanced">
         <summary>Advanced</summary>
-        <label>Ayanamsa
+        <label className="half"><span className="label-text">Ayanamsa</span>
           <select value={form.ayanamsa} onChange={(e) => set("ayanamsa", e.target.value as BirthInput["ayanamsa"])}>
             <option value="lahiri">Lahiri (Chitrapaksha)</option>
             <option value="raman">B.V. Raman</option>
@@ -117,7 +119,7 @@ export default function BirthForm({ loading, onSubmit }: Props) {
         </label>
       </details>
 
-      <button type="submit" disabled={loading}>{loading ? "Calculating…" : "Generate chart"}</button>
+      <button type="submit" className="primary" disabled={loading}>{loading ? "Calculating…" : "Generate chart"}</button>
       <p className="muted privacy">
         Your birth details are used only to calculate the chart and are not stored. The place you type is looked up
         with OpenStreetMap to find its coordinates and time zone.

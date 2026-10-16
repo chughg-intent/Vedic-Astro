@@ -25,9 +25,9 @@ export default function App() {
 
   return (
     <main>
-      <header>
-        <h1>Vedic Astro</h1>
-        <p className="muted">Sidereal birth chart, dashas, yogas and life-area analysis</p>
+      <header className="hero">
+        <h1>Vedic Destiny</h1>
+        <p className="subtitle">Your birth chart, dashas, yogas and a written reading from the classical texts.</p>
       </header>
       <BirthForm loading={loading} onSubmit={generate} />
       {error && <p className="error card">{error}</p>}
