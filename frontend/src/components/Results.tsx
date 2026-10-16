@@ -341,7 +341,7 @@ function WrittenReportView({ data, written, setWritten }: ReportProps) {
       ))}
       {r.current_period.length > 0 && <section><h4>The Period You Are In</h4><Paragraphs items={r.current_period} /></section>}
       {r.transits.length > 0 && <section><h4>Current Transits</h4><Paragraphs items={r.transits} /></section>}
-      <p className="muted small">Written by {written.report.model} from the readings listed below.</p>
+      <p className="muted small">Written by {written.report.model} from the classical readings matched to this chart.</p>
     </div>
   );
 }
@@ -349,10 +349,6 @@ function WrittenReportView({ data, written, setWritten }: ReportProps) {
 interface ReportProps { data: ChartResponse; written: ReportState; setWritten: (s: ReportState) => void }
 
 function Report({ data, written, setWritten }: ReportProps) {
-  // A rule with no chart factors is a general reading principle, not a statement about this chart.
-  const natal = data.interpretation.natal.filter((m) => m.factors.length > 0);
-  const byArea = (key: string) => natal.filter((m) => m.areas.includes(key));
-  const general = byArea("general");
   return (
     <div className="card">
       <WrittenReportView data={data} written={written} setWritten={setWritten} />
@@ -364,41 +360,6 @@ function Report({ data, written, setWritten }: ReportProps) {
       </p>
       <CurrentPeriod data={data} />
       <TransitReadings data={data} />
-      {general.length > 0 && (
-        <details className="area" open>
-          <summary><strong>Overview</strong><span className="count">{general.length}</span></summary>
-          <ul className="readings">{general.map((m) => <Reading key={m.id} m={m} />)}</ul>
-        </details>
-      )}
-      {Object.entries(data.life_areas).map(([key, a]) => {
-        const readings = byArea(key);
-        return (
-          <details key={key} className="area">
-            <summary><strong>{a.title}</strong><span className="count">{readings.length}</span></summary>
-            {readings.length > 0
-              ? <ul className="readings">{readings.map((m) => <Reading key={m.id} m={m} />)}</ul>
-              : <p className="muted">No rule from the encoded texts applies to this area for this chart yet.</p>}
-            <details className="factors">
-              <summary>Chart factors for this area</summary>
-              <ul>
-                {a.houses.map((h) => (
-                  <li key={h.house}>
-                    House {h.house} ({h.signifies}) in {h.sign}; lord {h.lord.planet} in house {h.lord.house} ({h.lord.sign}, {h.lord.dignity}
-                    {h.lord.retrograde && h.lord.planet !== "Rahu" && h.lord.planet !== "Ketu" ? ", retrograde" : ""}{h.lord.combust ? ", combust" : ""})
-                    {h.occupants.length > 0 && <>; occupied by {h.occupants.join(", ")}</>}
-                    {h.aspected_by.length > 0 && <>; aspected by {h.aspected_by.join(", ")}</>}
-                  </li>
-                ))}
-                {a.karakas.map((k) => (
-                  <li key={k.planet}>Karaka {k.planet}: house {k.house}, {k.sign}, {k.dignity}
-                    {k.conjunctions.length > 0 && <>; with {k.conjunctions.join(", ")}</>}</li>
-                ))}
-                {a.yogas.length > 0 && <li>Yogas: {a.yogas.map((y) => y.name).join(", ")}</li>}
-              </ul>
-            </details>
-          </details>
-        );
-      })}
     </div>
   );
 }

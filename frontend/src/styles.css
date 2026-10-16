@@ -73,10 +73,9 @@ tr.total td { font-weight: 600; }
 .yoga p { margin: 6px 0 0; color: var(--muted); }
 .yoga.cancelled { opacity: .6; }
 .tag { font-size: 11px; background: var(--accent-soft); color: var(--accent); border-radius: 10px; padding: 1px 8px; margin-left: 6px; }
-.area summary { cursor: pointer; }
 .count { font-size: 12px; color: var(--muted); border: 1px solid var(--border); border-radius: 10px; padding: 0 8px; margin-left: 8px; }
 .period { border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; margin: 16px 0; }
-.period h4, .area h4 { margin: 12px 0 4px; }
+.period h4 { margin: 12px 0 4px; }
 .readings { list-style: none; padding: 0; margin: 8px 0; }
 .reading { border-left: 3px solid var(--border); padding: 4px 0 4px 12px; margin: 10px 0; }
 .reading.favourable { border-left-color: var(--ok); }
@@ -89,8 +88,6 @@ tr.total td { font-weight: 600; }
 .tone.favourable { color: var(--ok); border: 1px solid var(--ok); }
 .tone.challenging { color: var(--low); border: 1px solid var(--low); }
 .tone.mixed { color: var(--accent); border: 1px solid var(--accent); }
-details.factors { margin: 8px 0 4px; font-size: 14px; }
-details.factors summary { cursor: pointer; color: var(--muted); }
 .written { border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; margin: 16px 0 24px; }
 .written h4 { margin: 18px 0 4px; }
 .prose { margin: 8px 0; line-height: 1.6; }
