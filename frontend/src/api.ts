@@ -28,12 +28,17 @@ export async function fetchChart(input: BirthInput): Promise<ChartResponse> {
 }
 
 /** Asks the backend to write the report with Claude. Uses the place already resolved for the chart. */
-export async function fetchReport(chart: ChartResponse): Promise<WrittenReport> {
+export async function fetchReport(chart: ChartResponse, accessCode?: string): Promise<WrittenReport> {
   const input = { ...chart.input, latitude: chart.place.latitude, longitude: chart.place.longitude,
                   timezone: chart.place.timezone };
   return handle<WrittenReport>(await fetch("/api/report", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...(accessCode ? { "X-Access-Code": accessCode } : {}) },
     body: JSON.stringify(input),
   }));
+}
+
+/** Whether writing a report needs the shared access code (set on the server when the site is shared). */
+export async function fetchConfig(): Promise<{ report_requires_code: boolean }> {
+  return handle(await fetch("/api/config"));
 }

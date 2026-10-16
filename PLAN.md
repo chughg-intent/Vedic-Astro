@@ -74,7 +74,8 @@ cites the chart factor and the source rule.
 - [ ] Validate calculations against Jagannatha Hora on a set of reference charts
       (Shadbala in particular — see notes in `engine/shadbala.py`)
 - [ ] Accounts, saved charts; payments if it becomes commercial
-- [ ] Deployment (container for API, static hosting for UI)
+- [x] Deployment config: one Docker image (API + built UI) on Render's free tier (`render.yaml`);
+      shared access code and daily cap on written reports; privacy note on the form
 - [ ] Pre-1950 India / LMT birth times: manual UTC-offset override
 
 ## Open questions

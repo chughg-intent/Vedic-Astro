@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { fetchReport } from "../api";
+import { fetchConfig, fetchReport } from "../api";
 import { ChartResponse, ChartStyle, DashaPeriod, ReportParagraph, RuleMatch, SIGNS, SIGN_ABBR, WrittenReport } from "../types";
 import ChartDiagram from "./ChartDiagram";
 
@@ -306,10 +306,18 @@ function Paragraphs({ items }: { items: ReportParagraph[] }) {
   return <>{items.map((p, i) => <p key={i} className="prose">{p.text}</p>)}</>;
 }
 
+const CODE_KEY = "vedic-astro-access-code";
+const readCode = () => { try { return localStorage.getItem(CODE_KEY) ?? ""; } catch { return ""; } };
+const saveCode = (c: string) => { try { localStorage.setItem(CODE_KEY, c); } catch { /* private mode */ } };
+
 function WrittenReportView({ data, written, setWritten }: ReportProps) {
+  const [needsCode, setNeedsCode] = useState(false);
+  const [code, setCode] = useState(readCode);
+  useEffect(() => { fetchConfig().then((c) => setNeedsCode(c.report_requires_code)).catch(() => {}); }, []);
   const write = () => {
     setWritten({ status: "loading" });
-    fetchReport(data).then((report) => setWritten({ status: "done", report }))
+    saveCode(code);
+    fetchReport(data, code.trim() || undefined).then((report) => setWritten({ status: "done", report }))
       .catch((e: Error) => setWritten({ status: "error", message: e.message }));
   };
   if (written.status !== "done") {
@@ -327,7 +335,12 @@ function WrittenReportView({ data, written, setWritten }: ReportProps) {
           </p>
         )}
         {written.status === "error" && <p className="error">{written.message}</p>}
-        <button onClick={write} disabled={written.status === "loading"}>
+        {needsCode && written.status !== "loading" && (
+          <label className="code-field">Access code
+            <input type="password" value={code} onChange={(e) => setCode(e.target.value)} autoComplete="off" />
+          </label>
+        )}
+        <button onClick={write} disabled={written.status === "loading" || (needsCode && !code.trim())}>
           {written.status === "loading" ? "Generating…" : written.status === "error" ? "Try again" : "Write the report"}
         </button>
       </div>

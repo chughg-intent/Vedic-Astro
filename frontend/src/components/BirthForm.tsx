@@ -118,6 +118,10 @@ export default function BirthForm({ loading, onSubmit }: Props) {
       </details>
 
       <button type="submit" disabled={loading}>{loading ? "Calculating…" : "Generate chart"}</button>
+      <p className="muted privacy">
+        Your birth details are used only to calculate the chart and are not stored. The place you type is looked up
+        with OpenStreetMap to find its coordinates and time zone.
+      </p>
     </form>
   );
 }

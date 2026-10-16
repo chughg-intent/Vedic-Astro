@@ -89,3 +89,21 @@ def test_refusal_and_truncation_raise(chart):
         R.write_report(chart, client=FakeClient(stop_reason="refusal"))
     with pytest.raises(R.ReportError, match="cut off"):
         R.write_report(chart, client=FakeClient(stop_reason="max_tokens"))
+
+
+def test_access_code_and_daily_limit(chart, monkeypatch):
+    import app.main as main
+    client = TestClient(app)
+    monkeypatch.setenv("ACCESS_CODE", "lotus")
+    monkeypatch.setenv("REPORT_DAILY_LIMIT", "1")
+    main._reports_today.update(day=None, count=0)
+    calls = []
+    monkeypatch.setattr(main.report_mod, "write_report", lambda c: calls.append(c) or {"report": {}})
+    assert client.get("/api/config").json() == {"report_requires_code": True}
+    assert client.post("/api/report", json=BIRTH).status_code == 401
+    assert client.post("/api/report", json=BIRTH, headers={"X-Access-Code": "wrong"}).status_code == 401
+    assert client.post("/api/report", json=BIRTH, headers={"X-Access-Code": "lotus"}).status_code == 200
+    assert client.post("/api/report", json=BIRTH, headers={"X-Access-Code": "lotus"}).status_code == 429
+    assert len(calls) == 1
+    monkeypatch.delenv("ACCESS_CODE")
+    assert client.get("/api/config").json() == {"report_requires_code": False}

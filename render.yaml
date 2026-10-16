@@ -1,0 +1,17 @@
+# Render Blueprint: one free web service built from the Dockerfile.
+# Secrets (sync: false) are entered in the Render dashboard, never committed.
+services:
+  - type: web
+    name: vedic-astro
+    runtime: docker
+    plan: free
+    branch: claude/vedic-astrology-app-tsqseb
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: ACCESS_CODE
+        sync: false
+      - key: REPORT_DAILY_LIMIT
+        value: "20"

@@ -1,11 +1,16 @@
 """FastAPI application: birth data in, full Vedic chart out."""
 from __future__ import annotations
 
+import hmac
+import os
+import threading
 from datetime import date, datetime, time, timezone
-from typing import Literal
+from pathlib import Path
+from typing import Literal, Optional
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, Header, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from . import geo
@@ -93,12 +98,58 @@ def chart(inp: BirthInput):
     }
 
 
+# --- Written report: optional access code and daily cap, both set through the environment ----------
+# ACCESS_CODE: when set, /api/report requires it in the X-Access-Code header.
+# REPORT_DAILY_LIMIT: when set, at most this many reports per UTC day (counted in memory, so a
+# restart resets it). Both guard the Claude API spend when the site is shared.
+_reports_lock = threading.Lock()
+_reports_today = {"day": None, "count": 0}
+
+
+def _access_code() -> str:
+    return os.environ.get("ACCESS_CODE", "").strip()
+
+
+def _daily_limit() -> int:
+    try:
+        return int(os.environ.get("REPORT_DAILY_LIMIT", "0"))
+    except ValueError:
+        return 0
+
+
+def _take_report_slot() -> None:
+    limit = _daily_limit()
+    with _reports_lock:
+        today = datetime.now(timezone.utc).date()
+        if _reports_today["day"] != today:
+            _reports_today.update(day=today, count=0)
+        if limit and _reports_today["count"] >= limit:
+            raise HTTPException(429, "Today's limit of written reports has been reached. Please try again tomorrow.")
+        _reports_today["count"] += 1
+
+
+def _give_back_report_slot() -> None:
+    with _reports_lock:
+        _reports_today["count"] = max(0, _reports_today["count"] - 1)
+
+
+@app.get("/api/config")
+def config():
+    return {"report_requires_code": bool(_access_code())}
+
+
 @app.post("/api/report")
-def report(inp: BirthInput):
+def report(inp: BirthInput, x_access_code: Optional[str] = Header(default=None)):
     """Readable report written by Claude from the matched readings (takes about a minute)."""
+    code = _access_code()
+    if code and not hmac.compare_digest((x_access_code or "").strip().encode(), code.encode()):
+        raise HTTPException(401, "Enter the access code to write the report." if not x_access_code
+                            else "That access code is not right.")
+    _take_report_slot()
     try:
         return report_mod.write_report(chart(inp))
     except report_mod.ReportError as e:
+        _give_back_report_slot()  # failed attempts don't use up the day's allowance
         raise HTTPException(e.status, str(e))
 
 
@@ -112,3 +163,11 @@ def _resolve_place(inp: BirthInput) -> dict:
         raise HTTPException(404, f"Could not find '{inp.city}, {inp.state or ''} {inp.country}'. "
                                  "Check the spelling or choose a nearby larger city.")
     return results[0].to_dict()
+
+
+# --- Built frontend ----------------------------------------------------------------------------------
+# In production one server serves both the API and the React app (FRONTEND_DIST is set in the Docker
+# image). Mounted last, so every /api route above takes precedence.
+_dist = Path(os.environ.get("FRONTEND_DIST", Path(__file__).resolve().parents[2] / "frontend" / "dist"))
+if (_dist / "index.html").exists():
+    app.mount("/", StaticFiles(directory=_dist, html=True), name="frontend")

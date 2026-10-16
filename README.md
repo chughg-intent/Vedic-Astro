@@ -28,7 +28,21 @@ npm run dev                         # http://localhost:5173
 Optional: set `SE_EPHE_PATH` to a folder of Swiss Ephemeris `.se1` files for maximum precision;
 otherwise the built-in Moshier ephemeris (~1 arc-second) is used.
 
-## API
+## Deploy (Render, free tier)
+
+`Dockerfile` builds one image that serves both the API and the built React app; `render.yaml` describes the
+Render service.
+
+1. Push the branch to GitHub.
+2. On render.com, sign in with GitHub → **New → Blueprint** → pick this repository. Render reads `render.yaml`.
+3. When asked, enter the secrets: `ANTHROPIC_API_KEY` (your Claude API key) and `ACCESS_CODE` (any word you
+   give testers; leave it empty to let anyone write reports). `REPORT_DAILY_LIMIT` defaults to 20 reports a day.
+4. The first build takes a few minutes. The site is then at `https://vedic-astro.onrender.com` (or a similar
+   name Render assigns), and every push to the branch redeploys it.
+
+Free services sleep after 15 minutes without visitors; the next visit takes about a minute to wake it.
+The daily report count is kept in memory, so a restart resets it.
+
 
 * `GET /api/places?city=&state=&country=` — candidate places with lat/long/time zone
 * `POST /api/chart` — full chart (planets, houses, 16 vargas, Vimshottari dasha, yogas, doshas,
