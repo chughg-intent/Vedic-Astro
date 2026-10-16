@@ -352,12 +352,6 @@ function Report({ data, written, setWritten }: ReportProps) {
   return (
     <div className="card">
       <WrittenReportView data={data} written={written} setWritten={setWritten} />
-      <h3>Readings from the texts</h3>
-      <p className="notice">
-        Readings below are paraphrased from Brihat Parasara Hora Sastra and Phaladeepika and shown only where this chart meets the
-        text's condition. Classical rules can contradict one another; the texts weigh them by planetary strength,
-        so treat each as one factor, not a verdict.
-      </p>
       <CurrentPeriod data={data} />
       <TransitReadings data={data} />
     </div>
