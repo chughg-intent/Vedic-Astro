@@ -165,3 +165,11 @@ tr.total td { font-weight: 600; }
 .written h4 { font-size: 21px; margin: 28px 0 4px; }
 .prose { margin: 10px 0; line-height: 1.6; }
 .house-intro { margin: 2px 0 8px; color: var(--muted); }
+
+/* phones: the tab bar becomes one swipeable row instead of wrapping onto several lines */
+@media (max-width: 640px) {
+  .tabs { display: flex; flex-wrap: nowrap; overflow-x: auto; max-width: 100%; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tabs button { flex: 0 0 auto; }
+  .card .scroll { margin: 0 -8px; padding: 0 8px; }
+}
