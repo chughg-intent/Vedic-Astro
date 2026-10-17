@@ -17,6 +17,10 @@ WORKDIR /app/backend
 COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY backend/ .
+# Offline place database (fallback when OpenStreetMap is unavailable): built once here so the
+# running server reads it from disk instead of loading ~430 MB of city data into memory.
+ENV GEONAMES_DB=/app/geonames.sqlite
+RUN python -c "from app.geo import build_db; build_db()"
 COPY knowledge/rules /app/knowledge/rules
 COPY --from=web /web/dist /app/frontend/dist
 ENV FRONTEND_DIST=/app/frontend/dist PYTHONUNBUFFERED=1

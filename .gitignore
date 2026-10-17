@@ -14,3 +14,6 @@ knowledge/books/
 knowledge/ocr/
 knowledge/tools/ocr
 .DS_Store
+
+# offline place database built from geonamescache (backend/app/geo.py)
+backend/.cache/

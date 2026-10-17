@@ -9,3 +9,4 @@ knowledge/ocr
 knowledge/tools
 .DS_Store
 .env
+backend/.cache

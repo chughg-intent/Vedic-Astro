@@ -1,17 +1,23 @@
 """Place lookup and local-time -> UTC conversion.
 
 Geocoding tries OpenStreetMap Nominatim first and falls back to the offline GeoNames city
-database bundled with ``geonamescache`` (cities with population >= 500).
+database bundled with ``geonamescache`` (cities with population >= 500). That data is ~430 MB
+once loaded as Python objects, so it is converted once into a small SQLite file (``build_db``,
+run at Docker build time) and queried from disk; the server never holds the full list in memory.
 The time zone is resolved from coordinates, and the historical offset (including DST) for the
 birth date comes from the IANA tz database.
 """
 from __future__ import annotations
 
 import logging
+import os
+import sqlite3
+import threading
 import unicodedata
 from dataclasses import asdict, dataclass
 from datetime import date, datetime, time, timedelta
 from functools import lru_cache
+from pathlib import Path
 from zoneinfo import ZoneInfo
 
 log = logging.getLogger(__name__)
@@ -49,41 +55,77 @@ def _norm(s: str) -> str:
     return s.strip().lower()
 
 
-@lru_cache(maxsize=1)
-def _geonames():
+DB_PATH = Path(os.environ.get("GEONAMES_DB", Path(__file__).resolve().parents[1] / ".cache" / "geonames.sqlite"))
+_build_lock = threading.Lock()
+
+
+def build_db(path: Path = DB_PATH) -> Path:
+    """Convert the bundled GeoNames cities into an indexed SQLite file (needs ~450 MB once)."""
     import geonamescache
-    gc = geonamescache.GeonamesCache(min_city_population=500)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(".tmp")
+    tmp.unlink(missing_ok=True)
+    cities = geonamescache.GeonamesCache(min_city_population=500).get_cities()
+    con = sqlite3.connect(tmp)
+    con.executescript("""
+        CREATE TABLE cities (id INTEGER PRIMARY KEY, name TEXT, lat REAL, lon REAL, cc TEXT,
+                             admin1 TEXT, population INTEGER, tz TEXT);
+        CREATE TABLE names (norm TEXT, city_id INTEGER);
+    """)
+    con.executemany("INSERT INTO cities VALUES (?,?,?,?,?,?,?,?)",
+                    ((c["geonameid"], c["name"], c["latitude"], c["longitude"], c["countrycode"],
+                      c.get("admin1code"), c["population"], c["timezone"]) for c in cities.values()))
+    con.executemany("INSERT INTO names VALUES (?,?)",
+                    ((n, c["geonameid"]) for c in cities.values()
+                     for n in {_norm(x) for x in (c["name"], *c.get("alternatenames", [])) if x} if n))
+    del cities
+    con.execute("CREATE INDEX names_norm ON names (norm)")
+    con.commit()
+    con.close()
+    tmp.replace(path)
+    return path
+
+
+def _db() -> sqlite3.Connection:
+    if not DB_PATH.exists():
+        with _build_lock:
+            if not DB_PATH.exists():
+                log.info("building offline place database at %s", DB_PATH)
+                build_db()
+    return sqlite3.connect(f"file:{DB_PATH}?mode=ro", uri=True)
+
+
+@lru_cache(maxsize=1)
+def _countries():
+    import geonamescache
+    gc = geonamescache.GeonamesCache()
     countries = gc.get_countries()
     by_name = {_norm(c["name"]): code for code, c in countries.items()}
     by_name.update({code.lower(): code for code in countries})
     by_name.update({"usa": "US", "us": "US", "united states of america": "US", "uk": "GB",
                     "england": "GB", "uae": "AE"})
-    us_states = {_norm(s["name"]): code for code, s in gc.get_us_states().items()}
-    cities = gc.get_cities()
-    index: dict[str, list[dict]] = {}
-    for c in cities.values():
-        for n in {c["name"], *c.get("alternatenames", [])}:
-            if n:
-                index.setdefault(_norm(n), []).append(c)
-    return countries, by_name, us_states, index
+    us_states = {_norm(st["name"]): code for code, st in gc.get_us_states().items()}
+    return countries, by_name, us_states
 
 
 def _offline_search(city: str, state: str | None, country: str | None, limit: int) -> list[Place]:
-    countries, by_name, us_states, index = _geonames()
-    hits = index.get(_norm(city), [])
+    countries, by_name, us_states = _countries()
     cc = by_name.get(_norm(country)) if country else None
+    sql = ("SELECT DISTINCT c.name, c.lat, c.lon, c.cc, c.admin1, c.population, c.tz "
+           "FROM names n JOIN cities c ON c.id = n.city_id WHERE n.norm = ?")
+    args: list = [_norm(city)]
     if cc:
-        hits = [h for h in hits if h["countrycode"] == cc]
+        sql += " AND c.cc = ?"
+        args.append(cc)
+    with _db() as con:
+        hits = con.execute(sql + " ORDER BY c.population DESC", args).fetchall()
     if state and cc == "US":
         code = us_states.get(_norm(state)) or state.upper()
-        filtered = [h for h in hits if h.get("admin1code") == code]
-        hits = filtered or hits
-    hits = sorted({h["geonameid"]: h for h in hits}.values(), key=lambda h: -h["population"])
+        hits = [h for h in hits if h[4] == code] or hits
     out = []
-    for h in hits[:limit]:
-        cname = countries.get(h["countrycode"], {}).get("name", h["countrycode"])
-        out.append(Place(h["name"], f"{h['name']}, {cname}", h["latitude"], h["longitude"],
-                         h["timezone"], h["countrycode"], "geonames"))
+    for name, lat, lon, ccode, _admin1, _pop, tz in hits[:limit]:
+        cname = countries.get(ccode, {}).get("name", ccode)
+        out.append(Place(name, f"{name}, {cname}", lat, lon, tz, ccode, "geonames"))
     return out
 
 
