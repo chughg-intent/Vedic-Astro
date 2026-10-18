@@ -1,4 +1,4 @@
-import { BirthInput, ChartResponse, Place, WrittenReport } from "./types";
+import { AskAnswer, BirthInput, ChartResponse, Place, Topic, WrittenReport } from "./types";
 
 async function handle<T>(res: Response): Promise<T> {
   if (!res.ok) {
@@ -27,6 +27,18 @@ export async function fetchChart(input: BirthInput): Promise<ChartResponse> {
   }));
 }
 
+/** Asks a question about one house of the chart; answered from the matched readings only. */
+export async function askQuestion(chart: ChartResponse, house: number, question: string,
+                                  accessCode?: string): Promise<AskAnswer> {
+  const birth = { ...chart.input, latitude: chart.place.latitude, longitude: chart.place.longitude,
+                  timezone: chart.place.timezone };
+  return handle<AskAnswer>(await fetch("/api/ask", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...(accessCode ? { "X-Access-Code": accessCode } : {}) },
+    body: JSON.stringify({ birth, house, question }),
+  }));
+}
+
 /** Asks the backend to write the report with Claude. Uses the place already resolved for the chart. */
 export async function fetchReport(chart: ChartResponse, accessCode?: string): Promise<WrittenReport> {
   const input = { ...chart.input, latitude: chart.place.latitude, longitude: chart.place.longitude,
@@ -39,6 +51,6 @@ export async function fetchReport(chart: ChartResponse, accessCode?: string): Pr
 }
 
 /** Whether writing a report needs the shared access code (set on the server when the site is shared). */
-export async function fetchConfig(): Promise<{ report_requires_code: boolean }> {
+export async function fetchConfig(): Promise<{ report_requires_code: boolean; topics: Topic[] }> {
   return handle(await fetch("/api/config"));
 }

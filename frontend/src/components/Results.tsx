@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { fetchConfig, fetchReport } from "../api";
-import { ChartResponse, ChartStyle, DashaPeriod, ReportParagraph, RuleMatch, SIGNS, SIGN_ABBR, WrittenReport } from "../types";
+import { askQuestion, fetchConfig, fetchReport } from "../api";
+import { AskAnswer, ChartResponse, ChartStyle, DashaPeriod, ReportParagraph, RuleMatch, SIGNS, SIGN_ABBR, Topic, WrittenReport } from "../types";
 import ChartDiagram from "./ChartDiagram";
 
-const TABS = ["Charts", "Planets", "Dasha", "Yogas & Doshas", "Strength", "Transits", "Report"] as const;
+const TABS = ["Charts", "Planets", "Dasha", "Yogas & Doshas", "Strength", "Transits", "Report", "Ask me Anything"] as const;
 type Tab = (typeof TABS)[number];
 
 const fmtDate = (iso: string) => new Date(iso).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
@@ -12,7 +12,8 @@ export default function Results({ data, style, onStyle }: { data: ChartResponse;
   const [tab, setTab] = useState<Tab>("Charts");
   // Kept here so the written report survives switching tabs; cleared when a new chart is cast.
   const [written, setWritten] = useState<ReportState>({ status: "idle" });
-  useEffect(() => setWritten({ status: "idle" }), [data]);
+  const [asked, setAsked] = useState<AskAnswer[]>([]);
+  useEffect(() => { setWritten({ status: "idle" }); setAsked([]); }, [data]);
   return (
     <section className="results">
       <div className="card summary">
@@ -48,6 +49,7 @@ export default function Results({ data, style, onStyle }: { data: ChartResponse;
       {tab === "Strength" && <Strength data={data} />}
       {tab === "Transits" && <Transits data={data} />}
       {tab === "Report" && <Report data={data} written={written} setWritten={setWritten} />}
+      {tab === "Ask me Anything" && <Ask data={data} asked={asked} setAsked={setAsked} />}
     </section>
   );
 }
@@ -304,6 +306,67 @@ type ReportState =
 
 function Paragraphs({ items }: { items: ReportParagraph[] }) {
   return <>{items.map((p, i) => <p key={i} className="prose">{p.text}</p>)}</>;
+}
+
+function Ask({ data, asked, setAsked }: { data: ChartResponse; asked: AskAnswer[]; setAsked: (a: AskAnswer[]) => void }) {
+  const [topics, setTopics] = useState<Topic[]>([]);
+  const [needsCode, setNeedsCode] = useState(false);
+  const [code, setCode] = useState(readCode);
+  const [house, setHouse] = useState(10);
+  const [question, setQuestion] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    fetchConfig().then((c) => { setTopics(c.topics); setNeedsCode(c.report_requires_code); }).catch(() => {});
+  }, []);
+  const ask = () => {
+    setBusy(true);
+    setError(null);
+    saveCode(code);
+    askQuestion(data, house, question.trim(), code.trim() || undefined)
+      .then((a) => { setAsked([a, ...asked]); setQuestion(""); })
+      .catch((e: Error) => setError(e.message))
+      .finally(() => setBusy(false));
+  };
+  const ready = question.trim().length > 0 && (!needsCode || code.trim().length > 0) && !busy;
+  return (
+    <div className="card">
+      <h3>Ask me Anything</h3>
+      <p className="muted">
+        Choose the area of life your question is about and ask it in your own words — for example "Is this a good
+        time to change my job?" or "What does my chart say about building wealth?". Answers come only from the
+        classical readings of your chart and your current and coming dasha periods. They point to tendencies and
+        timing; the decision is always yours. Your question is sent to the AI model along with the chart factors, so
+        leave out names and other personal details.
+      </p>
+      <div className="ask-form">
+        <label>Topic
+          <select value={house} onChange={(e) => setHouse(Number(e.target.value))} disabled={!topics.length}>
+            {topics.map((t) => <option key={t.house} value={t.house}>{t.title}</option>)}
+          </select>
+        </label>
+        <label>Your question
+          <textarea value={question} maxLength={500} rows={3} placeholder="Type your question…"
+                    onChange={(e) => setQuestion(e.target.value)} />
+          <span className="char-count">{question.length}/500</span>
+        </label>
+        {needsCode && (
+          <label className="code-field">Access code
+            <input type="password" value={code} onChange={(e) => setCode(e.target.value)} autoComplete="off" />
+          </label>
+        )}
+        {error && <p className="error">{error}</p>}
+        <button className="primary" onClick={ask} disabled={!ready}>{busy ? "Studying your chart…" : "Ask"}</button>
+      </div>
+      {asked.map((a, i) => (
+        <div key={asked.length - i} className="answer">
+          <p className="answer-topic">{a.title}</p>
+          <p className="answer-question">{a.question}</p>
+          {a.answer.map((p, j) => <p key={j} className="prose">{p.text}</p>)}
+        </div>
+      ))}
+    </div>
+  );
 }
 
 const CODE_KEY = "vedic-astro-access-code";

@@ -179,20 +179,19 @@ def _clean(report: dict, known: set[str], name: str | None) -> dict:
             "current_period": paragraphs(report["current_period"]), "transits": paragraphs(report["transits"])}
 
 
-def write_report(chart: dict, client: anthropic.Anthropic | None = None) -> dict:
-    payload = build_input(chart)
-    known = {r["id"] for key in ("natal_readings", "current_period_readings", "transit_readings") for r in payload[key]}
+def complete_json(system: str, user_text: str, schema: dict, *, effort: str, what: str = "report",
+                  max_tokens: int = 64000, client: anthropic.Anthropic | None = None):
+    """One Claude call returning JSON that matches ``schema``. Returns (parsed dict, message)."""
     try:
         client = client or anthropic.Anthropic()
         with client.beta.messages.stream(
             model=MODEL,
-            max_tokens=64000,
+            max_tokens=max_tokens,
             betas=["server-side-fallback-2026-07-01"],
             fallbacks="default",  # a safety-classifier false positive retries on another model instead of failing
-            output_config={"effort": "high", "format": {"type": "json_schema", "schema": REPORT_SCHEMA}},
-            system=[{"type": "text", "text": SYSTEM_PROMPT, "cache_control": {"type": "ephemeral"}}],
-            messages=[{"role": "user", "content": "Write the report for this chart.\n\n"
-                                                  + json.dumps(payload, ensure_ascii=False, sort_keys=True)}],
+            output_config={"effort": effort, "format": {"type": "json_schema", "schema": schema}},
+            system=[{"type": "text", "text": system, "cache_control": {"type": "ephemeral"}}],
+            messages=[{"role": "user", "content": user_text}],
         ) as stream:
             message = stream.get_final_message()
     except anthropic.AuthenticationError:
@@ -209,15 +208,27 @@ def write_report(chart: dict, client: anthropic.Anthropic | None = None) -> dict
         raise
 
     if message.stop_reason == "refusal":
-        raise ReportError("The model declined to write this report.")
+        raise ReportError(f"The model declined to write this {what}.")
     if message.stop_reason == "max_tokens":
-        raise ReportError("The report was cut off before it finished.")
+        raise ReportError(f"The {what} was cut off before it finished.")
     text = next((b.text for b in message.content if b.type == "text"), "")
     try:
-        report = json.loads(text)
+        return json.loads(text), message
     except json.JSONDecodeError:
-        raise ReportError("The model returned a report that could not be read.")
-    usage = message.usage
+        raise ReportError(f"The model returned a {what} that could not be read.")
+
+
+def usage_of(message) -> dict:
+    u = message.usage
+    return {"input_tokens": u.input_tokens, "output_tokens": u.output_tokens,
+            "cache_read_input_tokens": getattr(u, "cache_read_input_tokens", None)}
+
+
+def write_report(chart: dict, client: anthropic.Anthropic | None = None) -> dict:
+    payload = build_input(chart)
+    known = {r["id"] for key in ("natal_readings", "current_period_readings", "transit_readings") for r in payload[key]}
+    report, message = complete_json(
+        SYSTEM_PROMPT, "Write the report for this chart.\n\n" + json.dumps(payload, ensure_ascii=False, sort_keys=True),
+        REPORT_SCHEMA, effort="high", client=client)
     return {"report": _clean(report, known, chart["input"].get("name")), "model": message.model,
-            "usage": {"input_tokens": usage.input_tokens, "output_tokens": usage.output_tokens,
-                      "cache_read_input_tokens": getattr(usage, "cache_read_input_tokens", None)}}
+            "usage": usage_of(message)}

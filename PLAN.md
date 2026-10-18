@@ -67,6 +67,9 @@ cites the chart factor and the source rule.
       readings into a house-by-house reading (what the house governs, then factor-led paragraphs),
       plus current period and transits; rule ids are tracked per paragraph but not shown; the name is
       filled in server-side from a placeholder, so birth data is never sent
+- [x] Ask me Anything (`interpret/ask.py`, `POST /api/ask`): topic = one of the report's 12 house
+      sections; answered only from the chart's readings plus running and coming sub-periods; the
+      question is treated as untrusted data; health/surgery and death questions handled per policy
 - [ ] Evaluate report quality on a set of real charts (grounding, balance, policy adherence)
 - [ ] PDF export of the report
 

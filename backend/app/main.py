@@ -22,6 +22,7 @@ from .engine.shadbala import shadbala
 from .engine.transits import transits
 from .engine.vargas import VARGA_NAMES, VARGA_THEMES
 from .engine.yogas import all_yogas
+from .interpret import ask as ask_mod
 from .interpret import report as report_mod
 from .interpret import rules
 from .interpret.facts import extract
@@ -59,6 +60,11 @@ def places(city: str = Query(min_length=1), state: str | None = None, country: s
 
 @app.post("/api/chart")
 def chart(inp: BirthInput):
+    return _build(inp)[0]
+
+
+def _build(inp: BirthInput):
+    """The chart response, plus the objects the question endpoint needs to look ahead in time."""
     place = _resolve_place(inp)
     birth_utc, tzinfo = geo.local_to_utc(inp.date, inp.time, place["timezone"])
     c = build_chart(birth_utc, place["latitude"], place["longitude"], inp.ayanamsa, inp.node)
@@ -70,7 +76,7 @@ def chart(inp: BirthInput):
     current = dasha_mod.current_periods(dashas, now)
     gochara = transits(c, now)
 
-    return {
+    response = {
         "input": inp.model_dump(mode="json"),
         "place": place,
         "time": {"utc": birth_utc.isoformat(), "julian_day": c.jd, **tzinfo},
@@ -96,60 +102,115 @@ def chart(inp: BirthInput):
                                              av["bav"], yogas),
         },
     }
+    return response, c, yogas, dashas, now
 
 
 # --- Written report: optional access code and daily cap, both set through the environment ----------
 # ACCESS_CODE: when set, /api/report requires it in the X-Access-Code header.
 # REPORT_DAILY_LIMIT: when set, at most this many reports per UTC day (counted in memory, so a
 # restart resets it). Both guard the Claude API spend when the site is shared.
+# ASK_DAILY_LIMIT does the same for questions (default 50 when unset).
 _reports_lock = threading.Lock()
 _reports_today = {"day": None, "count": 0}
+_asks_today = {"day": None, "count": 0}
 
 
 def _access_code() -> str:
     return os.environ.get("ACCESS_CODE", "").strip()
 
 
-def _daily_limit() -> int:
+def _daily_limit(var: str = "REPORT_DAILY_LIMIT", default: int = 0) -> int:
     try:
-        return int(os.environ.get("REPORT_DAILY_LIMIT", "0"))
+        return int(os.environ.get(var, str(default)))
     except ValueError:
-        return 0
+        return default
+
+
+def _take_slot(counter: dict, limit: int, what: str) -> None:
+    with _reports_lock:
+        today = datetime.now(timezone.utc).date()
+        if counter["day"] != today:
+            counter.update(day=today, count=0)
+        if limit and counter["count"] >= limit:
+            raise HTTPException(429, f"Today's limit of {what} has been reached. Please try again tomorrow.")
+        counter["count"] += 1
+
+
+def _give_back_slot(counter: dict) -> None:
+    with _reports_lock:
+        counter["count"] = max(0, counter["count"] - 1)
 
 
 def _take_report_slot() -> None:
-    limit = _daily_limit()
-    with _reports_lock:
-        today = datetime.now(timezone.utc).date()
-        if _reports_today["day"] != today:
-            _reports_today.update(day=today, count=0)
-        if limit and _reports_today["count"] >= limit:
-            raise HTTPException(429, "Today's limit of written reports has been reached. Please try again tomorrow.")
-        _reports_today["count"] += 1
+    _take_slot(_reports_today, _daily_limit(), "written reports")
 
 
 def _give_back_report_slot() -> None:
-    with _reports_lock:
-        _reports_today["count"] = max(0, _reports_today["count"] - 1)
+    _give_back_slot(_reports_today)
+
+
+def _check_access_code(x_access_code: Optional[str]) -> None:
+    code = _access_code()
+    if code and not hmac.compare_digest((x_access_code or "").strip().encode(), code.encode()):
+        raise HTTPException(401, "Enter the access code to continue." if not x_access_code
+                            else "That access code is not right.")
 
 
 @app.get("/api/config")
 def config():
-    return {"report_requires_code": bool(_access_code())}
+    return {"report_requires_code": bool(_access_code()),
+            "topics": [{"house": h, "title": t} for h, (t, _) in report_mod.HOUSES.items()]}
 
 
 @app.post("/api/report")
 def report(inp: BirthInput, x_access_code: Optional[str] = Header(default=None)):
     """Readable report written by Claude from the matched readings (takes about a minute)."""
-    code = _access_code()
-    if code and not hmac.compare_digest((x_access_code or "").strip().encode(), code.encode()):
-        raise HTTPException(401, "Enter the access code to write the report." if not x_access_code
-                            else "That access code is not right.")
+    _check_access_code(x_access_code)
     _take_report_slot()
     try:
         return report_mod.write_report(chart(inp))
     except report_mod.ReportError as e:
         _give_back_report_slot()  # failed attempts don't use up the day's allowance
+        raise HTTPException(e.status, str(e))
+
+
+class AskInput(BaseModel):
+    birth: BirthInput
+    house: int = Field(ge=1, le=12)
+    question: str = Field(min_length=1, max_length=ask_mod.MAX_QUESTION)
+
+
+def _coming_periods(c, dashas, yogas, now, count: int = 4) -> list[dict]:
+    """The running sub-period and the next few, each with the readings that apply to it."""
+    out, seen_md = [], set()
+    for md in dashas:
+        for ad in md.get("sub", []):
+            if ad["end"] <= now:
+                continue
+            readings = rules.match_period(c, md["lord"], ad["lord"], yogas)
+            if md["lord"] not in seen_md:  # the mahadasha's own readings, once
+                readings = rules.match_period(c, md["lord"], None, yogas) + readings
+                seen_md.add(md["lord"])
+            out.append({"md": md["lord"], "ad": ad["lord"], "start": ad["start"].date().isoformat(),
+                        "end": ad["end"].date().isoformat(), "readings": readings})
+            if len(out) == count:
+                return out
+    return out
+
+
+@app.post("/api/ask")
+def ask(body: AskInput, x_access_code: Optional[str] = Header(default=None)):
+    """Answer a question about one house, from the readings and the running and coming periods."""
+    _check_access_code(x_access_code)
+    _take_slot(_asks_today, _daily_limit("ASK_DAILY_LIMIT", 50), "questions")
+    try:
+        chart_resp, c, yogas, dashas, now = _build(body.birth)
+        return ask_mod.answer_question(chart_resp, body.house, body.question, _coming_periods(c, dashas, yogas, now))
+    except ask_mod.AskError as e:
+        _give_back_slot(_asks_today)
+        raise HTTPException(422, str(e))
+    except report_mod.ReportError as e:
+        _give_back_slot(_asks_today)
         raise HTTPException(e.status, str(e))
 
 

@@ -52,6 +52,10 @@ The daily report count is kept in memory, so a restart resets it.
   those readings, tracking the rule ids behind each paragraph. Needs `ANTHROPIC_API_KEY` in the backend's
   environment. Only chart factors and readings are sent to the API — not the name, birth date,
   time or place. Takes about a minute.
+* `POST /api/ask` — `{birth, house, question}`; answers a question about one house (topic) from the
+  matched readings, the house's own factors and the running and next three sub-periods, in a
+  directional rather than yes/no way. Same access code as the report; `ASK_DAILY_LIMIT` (default 50)
+  caps questions per day.
 
 ## License note
 

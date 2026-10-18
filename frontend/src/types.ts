@@ -147,3 +147,14 @@ export interface WrittenReport {
   model: string;
   usage: { input_tokens: number; output_tokens: number; cache_read_input_tokens: number | null };
 }
+
+export interface Topic { house: number; title: string }
+
+export interface AskAnswer {
+  answer: ReportParagraph[];
+  on_topic: boolean;
+  house: number;
+  title: string;
+  question: string;
+  model: string;
+}

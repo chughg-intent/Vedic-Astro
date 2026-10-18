@@ -15,3 +15,5 @@ services:
         sync: false
       - key: REPORT_DAILY_LIMIT
         value: "20"
+      - key: ASK_DAILY_LIMIT
+        value: "50"
